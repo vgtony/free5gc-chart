@@ -1,23 +1,3 @@
-# values.example.yaml
-#
-# Template values file derived from a real, working deployment. This file
-# will NOT deploy as-is — it contains placeholders that must be replaced
-# with values for your own environment before use.
-#
-# Placeholders used below:
-#   <YOUR_REGISTRY_HOST>:<YOUR_REGISTRY_PORT>  - container registry hosting the
-#       custom-built amf/ausf/smf images (image.name for those 3 NFs only;
-#       all other NFs use public towards5gs/* images and need no change)
-#   <YOUR_LAN_SUBNET>      - the /24 used for the macvlan N2/N3/N4/N6/N9
-#       host networks (e.g. 10.160.101), plus the k8s host IP itself
-#   <YOUR_UPF_N4_SUBNET>   - subnet used for UPF N4 (PFCP, UPF<->SMF) interfaces
-#   <YOUR_UPF_DN_SUBNET>   - subnet used for UPF N3/route addresses toward the DN
-#
-# Also requires (not placeholder'd here, but must match your cluster):
-#   Worker nodes must carry the label free5gc-node=psa1 / psa2 / iupf
-#   matching the nodeSelector on the free5gc-upf upf1/upf2/upfb deployments,
-#   e.g.: kubectl label node <node> free5gc-node=psa1
-#
 deployAmf: true
 deployAusf: true
 deployDbPython: true
@@ -113,11 +93,6 @@ free5gc-amf:
           enable: true     # true or false
           expireTime: 6s   # default is 6 seconds
           maxRetryTimes: 4 # the max number of retransmission
-        # retransmission timer for NAS Configuration Update Command
-        t3555:
-          enable: true
-          expireTime: 6s
-          maxRetryTimes: 4
         # retransmission timer for NAS Authentication Request/Security Mode Command message
         t3560:
           enable: true     # true or false
@@ -150,7 +125,7 @@ free5gc-amf:
         - namf-loc
         - namf-oam
     image:
-      name: <YOUR_REGISTRY_HOST>:<YOUR_REGISTRY_PORT>/free5gc-amf
+      name: 10.160.101.91:32000/free5gc-amf
       pullPolicy: IfNotPresent
       tag: patched
     imagePullSecrets: []
@@ -193,7 +168,7 @@ free5gc-amf:
   global:
     amf:
       n2if:
-        ipAddress: <YOUR_LAN_SUBNET>.100
+        ipAddress: 10.160.101.100
       service:
         ngap:
           enabled: false
@@ -205,44 +180,44 @@ free5gc-amf:
     n2network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
-      gatewayIP: <YOUR_UPF_N4_SUBNET>.254
+      excludeIP: 10.160.101.254
+      gatewayIP: 10.100.50.254
       masterIf: ens18
       name: n2network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     n3network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
+      excludeIP: 10.160.101.254
       masterIf: ens18
       name: n3network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     n4network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
+      excludeIP: 10.160.101.254
       masterIf: ens18
       name: n4network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     n6network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
-      gatewayIP: <YOUR_LAN_SUBNET>.1
+      excludeIP: 10.160.101.254
+      gatewayIP: 10.160.101.1
       masterIf: ens18
       name: n6network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     n9network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
+      excludeIP: 10.160.101.254
       masterIf: ens18
       name: n9network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     name: free5gc
     nrf:
@@ -256,7 +231,7 @@ free5gc-amf:
       scheme: http
     smf:
       n4if:
-        ipAddress: <YOUR_LAN_SUBNET>.101
+        ipAddress: 10.160.101.101
     userPlaneArchitecture: ulcl
   initcontainers:
     busybox:
@@ -291,7 +266,7 @@ free5gc-ausf:
         reportCaller: false
       serviceNameList: '- nausf-auth'
     image:
-      name: <YOUR_REGISTRY_HOST>:<YOUR_REGISTRY_PORT>/free5gc-ausf
+      name: 10.160.101.91:32000/free5gc-ausf
       pullPolicy: IfNotPresent
       tag: patched
     imagePullSecrets: []
@@ -334,7 +309,7 @@ free5gc-ausf:
   global:
     amf:
       n2if:
-        ipAddress: <YOUR_LAN_SUBNET>.100
+        ipAddress: 10.160.101.100
       service:
         ngap:
           enabled: false
@@ -346,43 +321,43 @@ free5gc-ausf:
     n2network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
+      excludeIP: 10.160.101.254
       masterIf: ens18
       name: n2network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     n3network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
+      excludeIP: 10.160.101.254
       masterIf: ens18
       name: n3network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     n4network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
+      excludeIP: 10.160.101.254
       masterIf: ens18
       name: n4network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     n6network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
-      gatewayIP: <YOUR_LAN_SUBNET>.1
+      excludeIP: 10.160.101.254
+      gatewayIP: 10.160.101.1
       masterIf: ens18
       name: n6network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     n9network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
+      excludeIP: 10.160.101.254
       masterIf: ens18
       name: n9network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     name: free5gc
     nrf:
@@ -396,7 +371,7 @@ free5gc-ausf:
       scheme: http
     smf:
       n4if:
-        ipAddress: <YOUR_LAN_SUBNET>.101
+        ipAddress: 10.160.101.101
     userPlaneArchitecture: ulcl
   initcontainers:
     busybox:
@@ -434,7 +409,7 @@ free5gc-dbpython:
   global:
     amf:
       n2if:
-        ipAddress: <YOUR_LAN_SUBNET>.100
+        ipAddress: 10.160.101.100
       service:
         ngap:
           enabled: false
@@ -446,43 +421,43 @@ free5gc-dbpython:
     n2network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
+      excludeIP: 10.160.101.254
       masterIf: ens18
       name: n2network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     n3network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
+      excludeIP: 10.160.101.254
       masterIf: ens18
       name: n3network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     n4network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
+      excludeIP: 10.160.101.254
       masterIf: ens18
       name: n4network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     n6network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
-      gatewayIP: <YOUR_LAN_SUBNET>.1
+      excludeIP: 10.160.101.254
+      gatewayIP: 10.160.101.1
       masterIf: ens18
       name: n6network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     n9network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
+      excludeIP: 10.160.101.254
       masterIf: ens18
       name: n9network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     name: free5gc
     nrf:
@@ -496,7 +471,7 @@ free5gc-dbpython:
       scheme: http
     smf:
       n4if:
-        ipAddress: <YOUR_LAN_SUBNET>.101
+        ipAddress: 10.160.101.101
     userPlaneArchitecture: ulcl
   initcontainers:
     busybox:
@@ -520,7 +495,7 @@ free5gc-nrf:
   global:
     amf:
       n2if:
-        ipAddress: <YOUR_LAN_SUBNET>.100
+        ipAddress: 10.160.101.100
       service:
         ngap:
           enabled: false
@@ -532,43 +507,43 @@ free5gc-nrf:
     n2network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
+      excludeIP: 10.160.101.254
       masterIf: ens18
       name: n2network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     n3network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
+      excludeIP: 10.160.101.254
       masterIf: ens18
       name: n3network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     n4network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
+      excludeIP: 10.160.101.254
       masterIf: ens18
       name: n4network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     n6network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
-      gatewayIP: <YOUR_LAN_SUBNET>.1
+      excludeIP: 10.160.101.254
+      gatewayIP: 10.160.101.1
       masterIf: ens18
       name: n6network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     n9network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
+      excludeIP: 10.160.101.254
       masterIf: ens18
       name: n9network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     name: free5gc
     nrf:
@@ -582,7 +557,7 @@ free5gc-nrf:
       scheme: http
     smf:
       n4if:
-        ipAddress: <YOUR_LAN_SUBNET>.101
+        ipAddress: 10.160.101.101
     userPlaneArchitecture: ulcl
   initcontainers:
     busybox:
@@ -666,7 +641,7 @@ free5gc-nssf:
   global:
     amf:
       n2if:
-        ipAddress: <YOUR_LAN_SUBNET>.100
+        ipAddress: 10.160.101.100
       service:
         ngap:
           enabled: false
@@ -678,43 +653,43 @@ free5gc-nssf:
     n2network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
+      excludeIP: 10.160.101.254
       masterIf: ens18
       name: n2network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     n3network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
+      excludeIP: 10.160.101.254
       masterIf: ens18
       name: n3network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     n4network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
+      excludeIP: 10.160.101.254
       masterIf: ens18
       name: n4network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     n6network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
-      gatewayIP: <YOUR_LAN_SUBNET>.1
+      excludeIP: 10.160.101.254
+      gatewayIP: 10.160.101.1
       masterIf: ens18
       name: n6network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     n9network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
+      excludeIP: 10.160.101.254
       masterIf: ens18
       name: n9network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     name: free5gc
     nrf:
@@ -728,7 +703,7 @@ free5gc-nssf:
       scheme: http
     smf:
       n4if:
-        ipAddress: <YOUR_LAN_SUBNET>.101
+        ipAddress: 10.160.101.101
     userPlaneArchitecture: ulcl
   initcontainers:
     busybox:
@@ -1007,7 +982,7 @@ free5gc-pcf:
   global:
     amf:
       n2if:
-        ipAddress: <YOUR_LAN_SUBNET>.100
+        ipAddress: 10.160.101.100
       service:
         ngap:
           enabled: false
@@ -1019,43 +994,43 @@ free5gc-pcf:
     n2network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
+      excludeIP: 10.160.101.254
       masterIf: ens18
       name: n2network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     n3network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
+      excludeIP: 10.160.101.254
       masterIf: ens18
       name: n3network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     n4network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
+      excludeIP: 10.160.101.254
       masterIf: ens18
       name: n4network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     n6network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
-      gatewayIP: <YOUR_LAN_SUBNET>.1
+      excludeIP: 10.160.101.254
+      gatewayIP: 10.160.101.1
       masterIf: ens18
       name: n6network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     n9network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
+      excludeIP: 10.160.101.254
       masterIf: ens18
       name: n9network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     name: free5gc
     nrf:
@@ -1069,7 +1044,7 @@ free5gc-pcf:
       scheme: http
     smf:
       n4if:
-        ipAddress: <YOUR_LAN_SUBNET>.101
+        ipAddress: 10.160.101.101
     userPlaneArchitecture: ulcl
   initcontainers:
     busybox:
@@ -1156,7 +1131,7 @@ free5gc-smf:
   global:
     amf:
       n2if:
-        ipAddress: <YOUR_LAN_SUBNET>.100
+        ipAddress: 10.160.101.100
       service:
         ngap:
           enabled: false
@@ -1168,44 +1143,44 @@ free5gc-smf:
     n2network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
+      excludeIP: 10.160.101.254
       masterIf: ens18
       name: n2network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     n3network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
+      excludeIP: 10.160.101.254
       masterIf: ens18
       name: n3network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     n4network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
-      gatewayIP: <YOUR_UPF_N4_SUBNET>.246
+      excludeIP: 10.160.101.254
+      gatewayIP: 10.100.50.246
       masterIf: ens18
       name: n4network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     n6network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
-      gatewayIP: <YOUR_LAN_SUBNET>.1
+      excludeIP: 10.160.101.254
+      gatewayIP: 10.160.101.1
       masterIf: ens18
       name: n6network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     n9network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
+      excludeIP: 10.160.101.254
       masterIf: ens18
       name: n9network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     name: free5gc
     nrf:
@@ -1219,7 +1194,7 @@ free5gc-smf:
       scheme: http
     smf:
       n4if:
-        ipAddress: <YOUR_LAN_SUBNET>.101
+        ipAddress: 10.160.101.101
     userPlaneArchitecture: ulcl
   initcontainers:
     busybox:
@@ -1275,8 +1250,8 @@ free5gc-smf:
               type: AN # the type of the node (AN or UPF)
             UPF:  # the name of the node
               type: UPF # the type of the node (AN or UPF)
-              nodeID: <YOUR_UPF_N4_SUBNET>.241 # the IP/FQDN of N4 interface on this UPF (PFCP)
-              addr: <YOUR_UPF_N4_SUBNET>.241 # the IP/FQDN of N4 interface on this UPF (PFCP)
+              nodeID: 10.100.50.241 # the IP/FQDN of N4 interface on this UPF (PFCP)
+              addr: 10.100.50.241 # the IP/FQDN of N4 interface on this UPF (PFCP)
               sNssaiUpfInfos: # S-NSSAI information list for this UPF
                     - sNssai: # S-NSSAI (Single Network Slice Selection Assistance Information)
                         sst: 1 # Slice/Service Type (uinteger, range: 0~255)
@@ -1299,7 +1274,7 @@ free5gc-smf:
               interfaces: # Interface list for this UPF
                     - interfaceType: N3 # the type of the interface (N3 or N9)
                       endpoints: # the IP address of this N3/N9 interface on this UPF
-                        - <YOUR_UPF_N4_SUBNET>.233
+                        - 10.100.50.233
                       networkInstances:
                         - internet # Data Network Name (DNN)
           links: # the topology graph of userplane, A and B represent the two nodes of each link
@@ -1336,7 +1311,7 @@ free5gc-smf:
             - A: BranchingUPF
               B: AnchorUPF1
           specificPath:
-            - dest: <YOUR_UPF_DN_SUBNET>.26/32 # the destination IP address on Data Network (DN)
+            - dest: 10.100.100.26/32 # the destination IP address on Data Network (DN)
               # the order of UPF nodes in this path. We use the UPF's name to represent each UPF node.
               # The UPF's name should be consistent with smfcfg.yaml
               path: [BranchingUPF, AnchorUPF2]
@@ -1352,12 +1327,12 @@ free5gc-smf:
             - A: BranchingUPF
               B: AnchorUPF1
           specificPath:
-            - dest: <YOUR_UPF_DN_SUBNET>.16/32 # the destination IP address on Data Network (DN)
+            - dest: 10.100.100.16/32 # the destination IP address on Data Network (DN)
               # the order of UPF nodes in this path. We use the UPF's name to represent each UPF node.
               # The UPF's name should be consistent with smfcfg.yaml
               path: [BranchingUPF, AnchorUPF2]
     image:
-      name: <YOUR_REGISTRY_HOST>:<YOUR_REGISTRY_PORT>/free5gc-smf
+      name: 10.160.101.91:32000/free5gc-smf
       pullPolicy: IfNotPresent
       tag: patched
     imagePullSecrets: []
@@ -1401,7 +1376,7 @@ free5gc-udm:
   global:
     amf:
       n2if:
-        ipAddress: <YOUR_LAN_SUBNET>.100
+        ipAddress: 10.160.101.100
       service:
         ngap:
           enabled: false
@@ -1413,43 +1388,43 @@ free5gc-udm:
     n2network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
+      excludeIP: 10.160.101.254
       masterIf: ens18
       name: n2network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     n3network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
+      excludeIP: 10.160.101.254
       masterIf: ens18
       name: n3network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     n4network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
+      excludeIP: 10.160.101.254
       masterIf: ens18
       name: n4network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     n6network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
-      gatewayIP: <YOUR_LAN_SUBNET>.1
+      excludeIP: 10.160.101.254
+      gatewayIP: 10.160.101.1
       masterIf: ens18
       name: n6network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     n9network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
+      excludeIP: 10.160.101.254
       masterIf: ens18
       name: n9network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     name: free5gc
     nrf:
@@ -1463,7 +1438,7 @@ free5gc-udm:
       scheme: http
     smf:
       n4if:
-        ipAddress: <YOUR_LAN_SUBNET>.101
+        ipAddress: 10.160.101.101
     userPlaneArchitecture: ulcl
   initcontainers:
     busybox:
@@ -1556,7 +1531,7 @@ free5gc-udr:
   global:
     amf:
       n2if:
-        ipAddress: <YOUR_LAN_SUBNET>.100
+        ipAddress: 10.160.101.100
       service:
         ngap:
           enabled: false
@@ -1568,43 +1543,43 @@ free5gc-udr:
     n2network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
+      excludeIP: 10.160.101.254
       masterIf: ens18
       name: n2network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     n3network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
+      excludeIP: 10.160.101.254
       masterIf: ens18
       name: n3network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     n4network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
+      excludeIP: 10.160.101.254
       masterIf: ens18
       name: n4network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     n6network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
-      gatewayIP: <YOUR_LAN_SUBNET>.1
+      excludeIP: 10.160.101.254
+      gatewayIP: 10.160.101.1
       masterIf: ens18
       name: n6network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     n9network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
+      excludeIP: 10.160.101.254
       masterIf: ens18
       name: n9network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     name: free5gc
     nrf:
@@ -1618,7 +1593,7 @@ free5gc-udr:
       scheme: http
     smf:
       n4if:
-        ipAddress: <YOUR_LAN_SUBNET>.101
+        ipAddress: 10.160.101.101
     userPlaneArchitecture: ulcl
   initcontainers:
     busybox:
@@ -1692,7 +1667,7 @@ free5gc-upf:
   global:
     amf:
       n2if:
-        ipAddress: <YOUR_LAN_SUBNET>.100
+        ipAddress: 10.160.101.100
       service:
         ngap:
           enabled: false
@@ -1704,43 +1679,43 @@ free5gc-upf:
     n2network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
+      excludeIP: 10.160.101.254
       masterIf: ens18
       name: n2network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     n3network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
+      excludeIP: 10.160.101.254
       masterIf: ens18
       name: n3network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     n4network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
+      excludeIP: 10.160.101.254
       masterIf: ens18
       name: n4network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     n6network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
-      gatewayIP: <YOUR_LAN_SUBNET>.1
+      excludeIP: 10.160.101.254
+      gatewayIP: 10.160.101.1
       masterIf: ens18
       name: n6network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     n9network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
+      excludeIP: 10.160.101.254
       masterIf: ens18
       name: n9network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     name: free5gc
     nrf:
@@ -1754,7 +1729,7 @@ free5gc-upf:
       scheme: http
     smf:
       n4if:
-        ipAddress: <YOUR_LAN_SUBNET>.101
+        ipAddress: 10.160.101.101
     uesubnet: 10.1.0.0/16
     userPlaneArchitecture: ulcl
   upf:
@@ -1786,11 +1761,11 @@ free5gc-upf:
       successThreshold: 1
       timeoutSeconds: 10
     n3if:
-      ipAddress: <YOUR_UPF_N4_SUBNET>.233
+      ipAddress: 10.100.50.233
     n4if:
-      ipAddress: <YOUR_UPF_N4_SUBNET>.241
+      ipAddress: 10.100.50.241
     n6if:
-      ipAddress: <YOUR_UPF_DN_SUBNET>.12
+      ipAddress: 10.100.100.12
     name: upf
     nodeSelector: {}
     podAnnotations: {}
@@ -1842,11 +1817,11 @@ free5gc-upf:
       successThreshold: 1
       timeoutSeconds: 10
     n4if:
-      ipAddress: <YOUR_LAN_SUBNET>.121
+      ipAddress: 10.160.101.121
     n6if:
-      ipAddress: <YOUR_LAN_SUBNET>.123
+      ipAddress: 10.160.101.123
     n9if:
-      ipAddress: <YOUR_LAN_SUBNET>.122
+      ipAddress: 10.160.101.122
     name: upf1
     nodeSelector:
       free5gc-node: psa1
@@ -1899,11 +1874,11 @@ free5gc-upf:
       successThreshold: 1
       timeoutSeconds: 10
     n4if:
-      ipAddress: <YOUR_LAN_SUBNET>.131
+      ipAddress: 10.160.101.131
     n6if:
-      ipAddress: <YOUR_LAN_SUBNET>.133
+      ipAddress: 10.160.101.133
     n9if:
-      ipAddress: <YOUR_LAN_SUBNET>.132
+      ipAddress: 10.160.101.132
     name: upf2
     nodeSelector:
       free5gc-node: psa2
@@ -1956,13 +1931,13 @@ free5gc-upf:
       successThreshold: 1
       timeoutSeconds: 10
     n3if:
-      ipAddress: <YOUR_LAN_SUBNET>.111
+      ipAddress: 10.160.101.111
     n4if:
-      ipAddress: <YOUR_LAN_SUBNET>.112
+      ipAddress: 10.160.101.112
     n6if:
-      ipAddress: <YOUR_LAN_SUBNET>.113
+      ipAddress: 10.160.101.113
     n9if:
-      ipAddress: <YOUR_LAN_SUBNET>.113
+      ipAddress: 10.160.101.113
     name: upfb
     nodeSelector:
       free5gc-node: iupf
@@ -1993,7 +1968,7 @@ free5gc-webui:
   global:
     amf:
       n2if:
-        ipAddress: <YOUR_LAN_SUBNET>.100
+        ipAddress: 10.160.101.100
       service:
         ngap:
           enabled: false
@@ -2005,43 +1980,43 @@ free5gc-webui:
     n2network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
+      excludeIP: 10.160.101.254
       masterIf: ens18
       name: n2network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     n3network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
+      excludeIP: 10.160.101.254
       masterIf: ens18
       name: n3network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     n4network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
+      excludeIP: 10.160.101.254
       masterIf: ens18
       name: n4network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     n6network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
-      gatewayIP: <YOUR_LAN_SUBNET>.1
+      excludeIP: 10.160.101.254
+      gatewayIP: 10.160.101.1
       masterIf: ens18
       name: n6network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     n9network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
+      excludeIP: 10.160.101.254
       masterIf: ens18
       name: n9network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     name: free5gc
     nrf:
@@ -2055,7 +2030,7 @@ free5gc-webui:
       scheme: http
     smf:
       n4if:
-        ipAddress: <YOUR_LAN_SUBNET>.101
+        ipAddress: 10.160.101.101
     userPlaneArchitecture: ulcl
   initcontainers:
     busybox:
@@ -2131,7 +2106,7 @@ free5gc-webui:
 global:
   amf:
     n2if:
-      ipAddress: <YOUR_LAN_SUBNET>.100
+      ipAddress: 10.160.101.100
     service:
       ngap:
         enabled: false
@@ -2143,43 +2118,43 @@ global:
   n2network:
     cidr: 24
     enabled: true
-    excludeIP: <YOUR_LAN_SUBNET>.254
+    excludeIP: 10.160.101.254
     masterIf: ens18
     name: n2network
-    subnetIP: <YOUR_LAN_SUBNET>.0
+    subnetIP: 10.160.101.0
     type: macvlan
   n3network:
     cidr: 24
     enabled: true
-    excludeIP: <YOUR_LAN_SUBNET>.254
+    excludeIP: 10.160.101.254
     masterIf: ens18
     name: n3network
-    subnetIP: <YOUR_LAN_SUBNET>.0
+    subnetIP: 10.160.101.0
     type: macvlan
   n4network:
     cidr: 24
     enabled: true
-    excludeIP: <YOUR_LAN_SUBNET>.254
+    excludeIP: 10.160.101.254
     masterIf: ens18
     name: n4network
-    subnetIP: <YOUR_LAN_SUBNET>.0
+    subnetIP: 10.160.101.0
     type: macvlan
   n6network:
     cidr: 24
     enabled: true
-    excludeIP: <YOUR_LAN_SUBNET>.254
-    gatewayIP: <YOUR_LAN_SUBNET>.1
+    excludeIP: 10.160.101.254
+    gatewayIP: 10.160.101.1
     masterIf: ens18
     name: n6network
-    subnetIP: <YOUR_LAN_SUBNET>.0
+    subnetIP: 10.160.101.0
     type: macvlan
   n9network:
     cidr: 24
     enabled: true
-    excludeIP: <YOUR_LAN_SUBNET>.254
+    excludeIP: 10.160.101.254
     masterIf: ens18
     name: n9network
-    subnetIP: <YOUR_LAN_SUBNET>.0
+    subnetIP: 10.160.101.0
     type: macvlan
   name: free5gc
   nrf:
@@ -2192,7 +2167,7 @@ global:
     scheme: http
   smf:
     n4if:
-      ipAddress: <YOUR_LAN_SUBNET>.101
+      ipAddress: 10.160.101.101
   userPlaneArchitecture: ulcl
 mongodb:
   affinity: {}
@@ -2262,7 +2237,7 @@ mongodb:
     global:
       amf:
         n2if:
-          ipAddress: <YOUR_LAN_SUBNET>.100
+          ipAddress: 10.160.101.100
         service:
           ngap:
             enabled: false
@@ -2274,43 +2249,43 @@ mongodb:
       n2network:
         cidr: 24
         enabled: true
-        excludeIP: <YOUR_LAN_SUBNET>.254
+        excludeIP: 10.160.101.254
         masterIf: ens18
         name: n2network
-        subnetIP: <YOUR_LAN_SUBNET>.0
+        subnetIP: 10.160.101.0
         type: macvlan
       n3network:
         cidr: 24
         enabled: true
-        excludeIP: <YOUR_LAN_SUBNET>.254
+        excludeIP: 10.160.101.254
         masterIf: ens18
         name: n3network
-        subnetIP: <YOUR_LAN_SUBNET>.0
+        subnetIP: 10.160.101.0
         type: macvlan
       n4network:
         cidr: 24
         enabled: true
-        excludeIP: <YOUR_LAN_SUBNET>.254
+        excludeIP: 10.160.101.254
         masterIf: ens18
         name: n4network
-        subnetIP: <YOUR_LAN_SUBNET>.0
+        subnetIP: 10.160.101.0
         type: macvlan
       n6network:
         cidr: 24
         enabled: true
-        excludeIP: <YOUR_LAN_SUBNET>.254
-        gatewayIP: <YOUR_LAN_SUBNET>.1
+        excludeIP: 10.160.101.254
+        gatewayIP: 10.160.101.1
         masterIf: ens18
         name: n6network
-        subnetIP: <YOUR_LAN_SUBNET>.0
+        subnetIP: 10.160.101.0
         type: macvlan
       n9network:
         cidr: 24
         enabled: true
-        excludeIP: <YOUR_LAN_SUBNET>.254
+        excludeIP: 10.160.101.254
         masterIf: ens18
         name: n9network
-        subnetIP: <YOUR_LAN_SUBNET>.0
+        subnetIP: 10.160.101.0
         type: macvlan
       name: free5gc
       nrf:
@@ -2323,7 +2298,7 @@ mongodb:
         scheme: http
       smf:
         n4if:
-          ipAddress: <YOUR_LAN_SUBNET>.101
+          ipAddress: 10.160.101.101
       userPlaneArchitecture: ulcl
   configuration: ""
   containerSecurityContext:
@@ -2375,7 +2350,7 @@ mongodb:
   global:
     amf:
       n2if:
-        ipAddress: <YOUR_LAN_SUBNET>.100
+        ipAddress: 10.160.101.100
       service:
         ngap:
           enabled: false
@@ -2387,43 +2362,43 @@ mongodb:
     n2network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
+      excludeIP: 10.160.101.254
       masterIf: ens18
       name: n2network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     n3network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
+      excludeIP: 10.160.101.254
       masterIf: ens18
       name: n3network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     n4network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
+      excludeIP: 10.160.101.254
       masterIf: ens18
       name: n4network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     n6network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
-      gatewayIP: <YOUR_LAN_SUBNET>.1
+      excludeIP: 10.160.101.254
+      gatewayIP: 10.160.101.1
       masterIf: ens18
       name: n6network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     n9network:
       cidr: 24
       enabled: true
-      excludeIP: <YOUR_LAN_SUBNET>.254
+      excludeIP: 10.160.101.254
       masterIf: ens18
       name: n9network
-      subnetIP: <YOUR_LAN_SUBNET>.0
+      subnetIP: 10.160.101.0
       type: macvlan
     name: free5gc
     nrf:
@@ -2436,7 +2411,7 @@ mongodb:
       scheme: http
     smf:
       n4if:
-        ipAddress: <YOUR_LAN_SUBNET>.101
+        ipAddress: 10.160.101.101
     userPlaneArchitecture: ulcl
   hostAliases: []
   image:
@@ -2449,7 +2424,7 @@ mongodb:
   initdbScripts: {}
   labels: {}
   livenessProbe:
-    enabled: false
+    enabled: true
     failureThreshold: 6
     initialDelaySeconds: 30
     periodSeconds: 10
@@ -2509,7 +2484,7 @@ mongodb:
     accessModes:
     - ReadWriteOnce
     annotations: {}
-    enabled: false
+    enabled: true
     mountPath: /bitnami/mongodb/data/db/
     size: 6Gi
     subPath: ""
@@ -2521,7 +2496,7 @@ mongodb:
   podLabels: {}
   podManagementPolicy: OrderedReady
   podSecurityContext:
-    enabled: false
+    enabled: true
     fsGroup: 999
     sysctls: []
   podSecurityPolicy:
@@ -2532,7 +2507,7 @@ mongodb:
   rbac:
     create: false
   readinessProbe:
-    enabled: false
+    enabled: true
     failureThreshold: 6
     initialDelaySeconds: 5
     periodSeconds: 10

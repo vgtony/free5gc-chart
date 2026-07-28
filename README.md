@@ -1,218 +1,216 @@
-# free5gc Helm chart
+# free5GC Helm chart
 
-This is a Helm chart for deploying the [free5GC](https://github.com/free5gc/free5gc) on Kubernetes. It can be used to deploy the following Helm charts:
- - [free5gc-amf](./charts/free5gc-amf)
- - [free5gc-ausf](./charts/free5gc-ausf)
- - [free5gc-n3iwf](./charts/free5gc-n3iwf)
- - [free5gc-nrf](./charts/free5gc-nrf)
- - [free5gc-nssf](./charts/free5gc-nssf)
- - [free5gc-pcf](./charts/free5gc-pcf)
- - [free5gc-smf](./charts/free5gc-smf)
- - [free5gc-udm](./charts/free5gc-udm)
- - [free5gc-udr](./charts/free5gc-udr)
- - [free5gc-upf](./charts/free5gc-upf)
- - [free5gc-webui](./charts/free5gc-webui)
+This chart deploys a free5GC core with MongoDB and optional ULCL user-plane topology. It is based on [Costasgk/free5gc-chart](https://github.com/Costasgk/free5gc-chart) and includes compatibility fixes proven on a Kubernetes cluster using Multus:
+
+- MongoDB 6 uses TCP health probes instead of the removed `mongo` shell.
+- AMF configuration includes the required `T3555` timer.
+- The ULCL example defines one SMF topology and three consistent PFCP peers.
+
+The chart cannot choose valid Multus addresses for an unknown network. You must create a values file for your cluster before installing.
+
+## Components
+
+AMF, AUSF, NRF, NSSF, PCF, SMF, UDM, UDR, UPF, WebUI, DBPython, MongoDB, and optionally N3IWF.
 
 ## Prerequisites
- - A Kubernetes cluster ready to use with all worker nodes using kernel `5.0.0-23-generic` and they should contain gtp5g kernel module.
- - The AMF NGAP service relies on SCTP which is supported by default in Kubernetes from version [1.20](https://kubernetes.io/docs/setup/release/notes/#feature) onwards. If you are using an older version of Kubernetes please refer to this [link](https://v1-19.docs.kubernetes.io/docs/concepts/services-networking/service/#sctp) to enbale SCTP support.
- - A Persistent Volume Provisioner (optional).
- - [Multus-CNI](https://github.com/intel/multus-cni).
- - [Helm3](https://helm.sh/docs/intro/install/).
- - [Kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/) (optional).
- - A physical network interface on each Kubernetes node named `eth0`.
- - A physical network interface on each Kubernetes node named `eth1` to connect the UPF to the Data Network.
-**Note:** If the names of network interfaces on your Kubernetes nodes are different from `eth0` and `eth1`, see [Networks configuration](#networks-configuration).
 
-## Quickstart guide
+- Kubernetes with working pod networking and DNS.
+- Helm 3 and `kubectl`.
+- Multus installed on every node that may run AMF, SMF, UPF, or N3IWF.
+- The `macvlan`, `ipvlan`, `static`, and `tuning` CNI binaries on those nodes.
+- The `gtp5g` kernel module on every UPF node.
+- SCTP kernel support for AMF N2/NGAP.
+- A default StorageClass, or a pre-created PersistentVolume for MongoDB.
+- A physical parent interface with the same name on every selected node.
 
-### Verify the kernel version on worker nodes
-```console
-uname -r
-```
-It should be `5.0.0-23-generic`.
+Check the cluster:
 
-### Install the gtp5g kernel module on worker nodes
-Please follow [free5GC's wiki](https://github.com/free5gc/free5gc/wiki/Installation#c-install-user-plane-function-upf).
-
-
-### Create a Persistent Volume
-If you don't have a Persistent Volume provisioner, you can use the following commands to create a namespace for the project and a [Persistent Volume](https://kubernetes.io/docs/concepts/storage/persistent-volumes/) within this namespace that will be consumed by MongoDB by adapting it to your implementation (you have to replace `worker1` by the name of the node and `/home/vagrant/kubedata` by the right directory on this node in which you want to persist the MongoDB data).
-```console
-kubectl create ns <namespace>
-cat <<EOF | kubectl apply -f -
-apiVersion: v1
-kind: PersistentVolume
-metadata:
-  name: example-local-pv9
-  labels:
-    project: free5gc
-spec:
-  capacity:
-    storage: 8Gi
-  accessModes:
-  - ReadWriteOnce
-  persistentVolumeReclaimPolicy: Retain
-  local:
-    path: /home/vagrant/kubedata
-  nodeAffinity:
-    required:
-      nodeSelectorTerms:
-      - matchExpressions:
-        - key: kubernetes.io/hostname
-          operator: In
-          values:
-          - worker1
-EOF
-```
-**NOTE:** you must create the folder on the right node before creating the Peristent Volume.
-
-### Install free5gc
-```console
-helm -n <namespace> install <release-name> ./free5gc/
+```bash
+kubectl get nodes -o wide
+kubectl get pods -n kube-system | grep multus
+kubectl get storageclass
 ```
 
-### Check the state of the created pod
-```console
-kubectl -n <namespace> get pods -l "project=free5gc"
+On every UPF node:
+
+```bash
+ip -br link
+lsmod | grep gtp5g
 ```
 
-### Uninstall free5gc
-```console
-helm -n <namespace> delete <release-name>
+## 1. Create cluster values
+
+Copy the supplied template; do not edit `values.yaml` for each installation:
+
+```bash
+cp values.example.yaml my-values.yaml
 ```
-Or...
-```console
-helm -n <namespace> uninstall <release-name>
+
+Replace every `<YOUR_...>` placeholder:
+
+```bash
+grep -n '<YOUR_' my-values.yaml
 ```
 
-## Configuration
+The command must return no output before installation.
 
-### Enable the ULCL feature
-If you want to enable the ULCL feature, you can use the [ulcl-enabled-values.yaml](./ulcl-enabled-values.yaml) to override the default chart values.
+### Multus address plan
 
-### Networks configuration
+Each static address must belong to its configured subnet, be unused and unique, and be reachable at layer 2 from every node that may host the pod.
 
-In this section, we'll suppose that you have only one interface on each Kubernetes node and its name is `toto`. Then you have to set these parameters to `toto`:
- - `global.n2network.masterIf`
- - `global.n3network.masterIf`
- - `global.n4network.masterIf`
- - `global.n6network.masterIf`
- - `global.n9network.masterIf`
+| Purpose | Value |
+| --- | --- |
+| Parent NIC on every relevant node | `global.n2network.masterIf` through `global.n9network.masterIf` |
+| AMF N2 address | `global.amf.n2if.ipAddress` |
+| SMF N4 address | `global.smf.n4if.ipAddress` |
+| Single-UPF N3/N4/N6 | `free5gc-upf.upf.*if.ipAddress` |
+| Branching UPF N3/N4/N9 | `free5gc-upf.upfb.*if.ipAddress` |
+| Anchor UPF 1 N4/N6/N9 | `free5gc-upf.upf1.*if.ipAddress` |
+| Anchor UPF 2 N4/N6/N9 | `free5gc-upf.upf2.*if.ipAddress` |
+| N6 data-network gateway | `global.n6network.gatewayIP` |
+| UE address pools | SMF `dnnUpfInfoList[].pools` and UPF `dnnList[].cidr` |
 
-In addition, please make sure `global.n6network.subnetIP`, `global.n6network.gatewayIP` and `free5gc-upf.upf.n6if.ipAddress` parameters will match the IP address of the `toto` interface in order to make the UPF able to reach the Data Network via its N6 interface.
+`subnetIP` is the network address, not a pod address. `cidr` is the prefix length. For example:
 
-In case of ULCL enabled take care about `free5gc-upf.upfb.n6if.ipAddress`, `free5gc-upf.upf1.n6if.ipAddress` and `free5gc-upf.upf2.n6if.ipAddress` instead of `free5gc-upf.upf.n6if.ipAddress`.
+```yaml
+global:
+  n4network:
+    masterIf: ens18
+    subnetIP: 10.20.30.0
+    cidr: 24
+  smf:
+    n4if:
+      ipAddress: 10.20.30.10
 
-## Customized installation
-This chart allows you to customize its installation. The table below shows the parameters that can be modified before installing the chart or when upgrading it as well as their default values.
+free5gc-upf:
+  upfb:
+    n4if:
+      ipAddress: 10.20.30.11
+```
 
-### Main chart parameters
-| Parameter | Description | Default value |
-| --- | --- | --- |
-| `deployMongoDB` | If `true` then the MongoDB subchart will be installed. | `true` |
-| `deploy<NFName in capital letters>` | If `true` then the `<NFName>` subchart will be installed. `<NFName>` must be one of the following: AMF, AUSF, N3IWF, NRF, NSSF, PCF, SMF, UDM, UDR, UPF, WEBUI. | `see values.yaml` |
+Do not copy sample IPs unless that subnet is routed on your nodes. Avoid a default gateway on N3, N4, or N9 unless the network design requires it; multiple default routes commonly break pod connectivity.
 
-### Global and subcharts' parameters
-Please check this [link](https://helm.sh/docs/chart_template_guide/subcharts_and_globals/) to see how to customize global and subcharts' parameters.
+### macvlan versus ipvlan
 
-| Parameter | Description | Default value |
-| --- | --- | --- |
-| `global.projectName` | The name of the project. | `free5gc` |
-| `global.userPlaneArchitecture` | User plane topology. Possible values are `single` and `ulcl` | `single` |
-| `global.sbi.scheme` | The SBI scheme for all control plane NFs. Possible values are `http` and `https` | `http` |
-| `global.nrf.service.name` | The name of the service used to expose the NRF SBI interface. | `nrf-nnrf` |
-| `global.nrf.service.type` | The type of the NRF SBI service. | `NodePort` |
-| `global.nrf.service.port` | The NRF SBI port number. | `8000` |
-| `global.nrf.service.port` | The NRF SBI service nodePort number. | `30800` |
-| `global.smf.n4if.ipAddress` | The IP address of the SMF’s N4 interface. | `10.100.50.249` |
-| `global.amf.n2if.ipAddress` | The IP address of the AMF’s N2 interface. | `10.100.50.249` |
-| `global.amf.service.ngap.enabled` | If `true` then a Kubernetes service will be used to expose the AMF NGAP service. | `false` |
-| `global.amf.service.ngap.name` | The name of the AMF NGAP service. | `amf-n2` |
-| `global.amf.service.ngap.type` | The type of the AMF NGAP service. | `NodePort` |
-| `global.amf.service.ngap.port` | The AMF NGAP port number. | `38412` |
-| `global.amf.service.ngap.nodeport` | The nodePort number to access the AMF NGAP service from outside of cluster. | `31412` |
-| `global.amf.service.ngap.protocol` | The protocol used for this service. | `SCTP` |
+Use the type supported by your network:
 
-### N2 Network parameters
-| Parameter | Description | Default value |
-| --- | --- | --- |
-| `global.n2network.enabled` | If `true` then N2-related Network Attachment Definitions resources will be created. | `true` |
-| `global.n2network.name` | N2 network name. | `n2network` |
-| `global.n2network.masterIf` | N2 network MACVLAN master interface. | `eth0` |
-| `global.n2network.subnetIP` | N2 network subnet IP address. | `10.100.50.248` |
-| `global.n2network.cidr` | N2 network cidr. | `29` |
-| `global.n2network.gatewayIP` | N2 network gateway IP address. | `10.100.50.254` |
+```yaml
+global:
+  n2network:
+    type: macvlan
+    masterIf: ens18
+```
 
-### N3 Network parameters
-| Parameter | Description | Default value |
-| --- | --- | --- |
-| `global.n3network.enabled` | If `true` then N3-related Network Attachment Definitions resources will be created. | `true` |
-| `global.n3network.name` | N3 network name. | `n3network` |
-| `global.n3network.masterIf` | N3 network MACVLAN master interface. | `eth0` |
-| `global.n3network.subnetIP` | N3 network subnet IP address. | `10.100.50.232` |
-| `global.n3network.cidr` | N3 network cidr. | `29` |
-| `global.n3network.gatewayIP` | N3 network gateway IP address. | `10.100.50.238` |
+Some switches or virtualized networks reject multiple MAC addresses behind one port. In that case use `ipvlan` if the environment supports it. All scheduled nodes must have the configured `masterIf`.
 
-### N4 Network parameters
-| Parameter | Description | Default value |
-| --- | --- | --- |
-| `global.n4network.enabled` | If `true` then N4-related Network Attachment Definitions resources will be created. | `true` |
-| `global.n4network.name` | N4 network name. | `n4network` |
-| `global.n4network.masterIf` | N4 network MACVLAN master interface. | `eth0` |
-| `global.n4network.subnetIP` | N4 network subnet IP address. | `10.100.50.240` |
-| `global.n4network.cidr` | N4 network cidr. | `29` |
-| `global.n4network.gatewayIP` | N4 network gateway IP address. | `10.100.50.246` |
+### ULCL node placement
 
-### N6 Network parameters
-| Parameter | Description | Default value |
-| --- | --- | --- |
-| `global.n6network.enabled` | If `true` then N6-related Network Attachment Definitions resources will be created. | `true` |
-| `global.n6network.name` | N6 network name. | `n6network` |
-| `global.n6network.masterIf` | N6 network MACVLAN master interface. The IP address of this interface must be in the N6 network subnet IP rang. | `eth1` |
-| `global.n6network.subnetIP` | N6 network subnet IP address (The IP address of the Data Network. | `10.100.100.0` |
-| `global.n6network.cidr` | N6 network cidr. | `24` |
-| `global.n6network.gatewayIP` | N6 network gateway IP address (The IP address to go to the Data Network). | `10.100.100.1` |
+The example uses these node labels:
 
-### N9 Network parameters
-These parameters if `global.userPlaneArchitecture` is set to `ulcl`.
+```bash
+kubectl label node <branching-node> free5gc-node=iupf
+kubectl label node <anchor-1-node> free5gc-node=psa1
+kubectl label node <anchor-2-node> free5gc-node=psa2
+```
 
-| Parameter | Description | Default value |
-| --- | --- | --- |
-These parameters if `global.userPlaneArchitecture` is set to `ulcl`.
-| `global.n9network.enabled` | If `true` then N9-related Network Attachment Definitions resources will be created. | `true` |
-| `global.n9network.name` | N9 network name. | `n9network` |
-| `global.n9network.masterIf` | N9 network MACVLAN master interface. The IP address of this interface must be in the N9 network subnet IP rang. | `eth0` |
-| `global.n9network.subnetIP` | N9 network subnet IP address (The IP address of the Data Network. | `10.100.50.224` |
-| `global.n9network.cidr` | N9 network cidr. | `29` |
-| `global.n9network.gatewayIP` | N9 network gateway IP address (The IP address to go to the Data Network). | `10.100.50.230` |
+Remove or change the matching `nodeSelector` entries if you use a different placement model.
 
-## Deploying on your own cluster
+The SMF topology addresses must exactly equal the corresponding UPF interfaces:
 
-`values.yaml` in this repo is the exact configuration of a real, working
-deployment (custom-patched amf/ausf/smf images, a 3-node ULCL UPF topology
-across labeled worker nodes, and a private container registry) — it will
-**not** work unmodified on a different cluster.
+- `BranchingUPF.nodeID`/`addr` = `upfb.n4if.ipAddress`
+- `AnchorUPF1.nodeID`/`addr` = `upf1.n4if.ipAddress`
+- `AnchorUPF2.nodeID`/`addr` = `upf2.n4if.ipAddress`
+- Every SMF N3/N9 endpoint = the matching UPF N3/N9 address.
 
-To deploy your own copy:
+Never define `free5gc-smf:` twice in one YAML file; duplicate YAML keys silently discard configuration in common parsers.
 
-1. Copy `values.example.yaml` to your own file, e.g. `my-values.yaml`.
-2. Replace every `<YOUR_...>` placeholder with values for your environment
-   (registry host/port, LAN subnet, UPF data subnets — see comments at the
-   top of `values.example.yaml` for what each one means).
-3. Label your worker nodes to match the UPF `nodeSelector`s:
-   ```bash
-   kubectl label node <psa1-node> free5gc-node=psa1
-   kubectl label node <psa2-node> free5gc-node=psa2
-   kubectl label node <iupf-node> free5gc-node=iupf
-   ```
-4. Build/push your own amf, ausf, and smf images to your registry (or edit
-   those three `image.name`/`tag` fields to point at public images instead).
-5. Install:
-   ```bash
-   helm install free5gc . -f my-values.yaml -n free5gc --create-namespace
-   ```
+### Images
 
-## Reference
- - https://github.com/free5gc/free5gc
- - https://github.com/free5gc/free5gc-compose
+The example references locally patched AMF, AUSF, and SMF images. Change their `image.name` and `image.tag` to images available to your cluster. For a private registry, create an image pull secret and set `imagePullSecrets`.
+
+## 2. Validate and install
+
+```bash
+helm lint . -f my-values.yaml
+helm template free5gc . -n free5gc -f my-values.yaml >/tmp/free5gc-rendered.yaml
+helm upgrade --install free5gc . \
+  --namespace free5gc \
+  --create-namespace \
+  -f my-values.yaml \
+  --timeout 10m \
+  --wait
+```
+
+For the packaged chart, replace `.` with `./free5gc-1.1.8.tgz`.
+
+## 3. Verify
+
+```bash
+kubectl get pods -n free5gc
+helm status free5gc -n free5gc
+kubectl get network-attachment-definitions -n free5gc
+```
+
+Every workload should show `Running` and `1/1`.
+
+Verify Multus attachments:
+
+```bash
+kubectl get pods -n free5gc -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{.metadata.annotations.k8s\.v1\.cni\.cncf\.io/network-status}{"\n\n"}{end}'
+```
+
+Verify AMF N2:
+
+```bash
+kubectl logs -n free5gc deployment/free5gc-free5gc-amf-amf | grep 'Listen on .*:38412'
+```
+
+Verify ULCL PFCP associations:
+
+```bash
+kubectl logs -n free5gc deployment/free5gc-free5gc-smf-smf | grep 'setup association'
+```
+
+If a ConfigMap changes but its pod does not restart, restart only that deployment:
+
+```bash
+kubectl rollout restart -n free5gc deployment/<deployment-name>
+kubectl rollout status -n free5gc deployment/<deployment-name>
+```
+
+## Troubleshooting
+
+For `Init:0/1` on most control-plane pods, inspect MongoDB:
+
+```bash
+kubectl describe pod -n free5gc mongodb-0
+kubectl logs -n free5gc mongodb-0
+```
+
+For `FailedCreatePodSandBox` or Multus errors:
+
+```bash
+kubectl describe pod -n free5gc <pod>
+kubectl get network-attachment-definitions -n free5gc -o yaml
+```
+
+Confirm `masterIf` exists on the selected node and the static IP is unused and inside the configured subnet.
+
+SMF PFCP retry timeouts mean its topology N4 address does not match a reachable UPF N4 address. Compare SMF logs with each pod's Multus `network-status`.
+
+AMF `invalid T3555` means an older values file replaced the fixed AMF configuration. Add the timer shown in `values.example.yaml`.
+
+## Upgrade and uninstall
+
+```bash
+helm upgrade free5gc . -n free5gc -f my-values.yaml --timeout 10m --wait
+helm uninstall free5gc -n free5gc
+```
+
+Uninstalling does not necessarily delete MongoDB PVCs. Review them explicitly:
+
+```bash
+kubectl get pvc -n free5gc
+```
+
+See [LOCAL-CHANGES.md](./LOCAL-CHANGES.md) for the repair history.

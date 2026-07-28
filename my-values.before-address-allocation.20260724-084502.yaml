@@ -113,11 +113,6 @@ free5gc-amf:
           enable: true     # true or false
           expireTime: 6s   # default is 6 seconds
           maxRetryTimes: 4 # the max number of retransmission
-        # retransmission timer for NAS Configuration Update Command
-        t3555:
-          enable: true
-          expireTime: 6s
-          maxRetryTimes: 4
         # retransmission timer for NAS Authentication Request/Security Mode Command message
         t3560:
           enable: true     # true or false
@@ -207,7 +202,7 @@ free5gc-amf:
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
       gatewayIP: <YOUR_UPF_N4_SUBNET>.254
-      masterIf: ens18
+      masterIf: eth0
       name: n2network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -215,7 +210,7 @@ free5gc-amf:
       cidr: 24
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
-      masterIf: ens18
+      masterIf: eth0
       name: n3network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -223,7 +218,7 @@ free5gc-amf:
       cidr: 24
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
-      masterIf: ens18
+      masterIf: eth0
       name: n4network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -232,7 +227,7 @@ free5gc-amf:
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
       gatewayIP: <YOUR_LAN_SUBNET>.1
-      masterIf: ens18
+      masterIf: eth0
       name: n6network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -240,7 +235,7 @@ free5gc-amf:
       cidr: 24
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
-      masterIf: ens18
+      masterIf: eth0
       name: n9network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -347,7 +342,7 @@ free5gc-ausf:
       cidr: 24
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
-      masterIf: ens18
+      masterIf: eth0
       name: n2network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -355,7 +350,7 @@ free5gc-ausf:
       cidr: 24
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
-      masterIf: ens18
+      masterIf: eth0
       name: n3network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -363,7 +358,7 @@ free5gc-ausf:
       cidr: 24
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
-      masterIf: ens18
+      masterIf: eth0
       name: n4network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -372,7 +367,7 @@ free5gc-ausf:
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
       gatewayIP: <YOUR_LAN_SUBNET>.1
-      masterIf: ens18
+      masterIf: eth0
       name: n6network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -380,7 +375,7 @@ free5gc-ausf:
       cidr: 24
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
-      masterIf: ens18
+      masterIf: eth0
       name: n9network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -447,7 +442,7 @@ free5gc-dbpython:
       cidr: 24
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
-      masterIf: ens18
+      masterIf: eth0
       name: n2network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -455,7 +450,7 @@ free5gc-dbpython:
       cidr: 24
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
-      masterIf: ens18
+      masterIf: eth0
       name: n3network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -463,7 +458,7 @@ free5gc-dbpython:
       cidr: 24
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
-      masterIf: ens18
+      masterIf: eth0
       name: n4network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -472,7 +467,7 @@ free5gc-dbpython:
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
       gatewayIP: <YOUR_LAN_SUBNET>.1
-      masterIf: ens18
+      masterIf: eth0
       name: n6network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -480,7 +475,7 @@ free5gc-dbpython:
       cidr: 24
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
-      masterIf: ens18
+      masterIf: eth0
       name: n9network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -533,7 +528,7 @@ free5gc-nrf:
       cidr: 24
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
-      masterIf: ens18
+      masterIf: eth0
       name: n2network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -541,7 +536,7 @@ free5gc-nrf:
       cidr: 24
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
-      masterIf: ens18
+      masterIf: eth0
       name: n3network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -549,7 +544,7 @@ free5gc-nrf:
       cidr: 24
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
-      masterIf: ens18
+      masterIf: eth0
       name: n4network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -558,7 +553,7 @@ free5gc-nrf:
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
       gatewayIP: <YOUR_LAN_SUBNET>.1
-      masterIf: ens18
+      masterIf: eth0
       name: n6network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -566,7 +561,7 @@ free5gc-nrf:
       cidr: 24
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
-      masterIf: ens18
+      masterIf: eth0
       name: n9network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -679,7 +674,7 @@ free5gc-nssf:
       cidr: 24
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
-      masterIf: ens18
+      masterIf: eth0
       name: n2network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -687,7 +682,7 @@ free5gc-nssf:
       cidr: 24
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
-      masterIf: ens18
+      masterIf: eth0
       name: n3network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -695,7 +690,7 @@ free5gc-nssf:
       cidr: 24
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
-      masterIf: ens18
+      masterIf: eth0
       name: n4network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -704,7 +699,7 @@ free5gc-nssf:
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
       gatewayIP: <YOUR_LAN_SUBNET>.1
-      masterIf: ens18
+      masterIf: eth0
       name: n6network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -712,7 +707,7 @@ free5gc-nssf:
       cidr: 24
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
-      masterIf: ens18
+      masterIf: eth0
       name: n9network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -1020,7 +1015,7 @@ free5gc-pcf:
       cidr: 24
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
-      masterIf: ens18
+      masterIf: eth0
       name: n2network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -1028,7 +1023,7 @@ free5gc-pcf:
       cidr: 24
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
-      masterIf: ens18
+      masterIf: eth0
       name: n3network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -1036,7 +1031,7 @@ free5gc-pcf:
       cidr: 24
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
-      masterIf: ens18
+      masterIf: eth0
       name: n4network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -1045,7 +1040,7 @@ free5gc-pcf:
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
       gatewayIP: <YOUR_LAN_SUBNET>.1
-      masterIf: ens18
+      masterIf: eth0
       name: n6network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -1053,7 +1048,7 @@ free5gc-pcf:
       cidr: 24
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
-      masterIf: ens18
+      masterIf: eth0
       name: n9network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -1169,7 +1164,7 @@ free5gc-smf:
       cidr: 24
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
-      masterIf: ens18
+      masterIf: eth0
       name: n2network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -1177,7 +1172,7 @@ free5gc-smf:
       cidr: 24
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
-      masterIf: ens18
+      masterIf: eth0
       name: n3network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -1186,7 +1181,7 @@ free5gc-smf:
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
       gatewayIP: <YOUR_UPF_N4_SUBNET>.246
-      masterIf: ens18
+      masterIf: eth0
       name: n4network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -1195,7 +1190,7 @@ free5gc-smf:
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
       gatewayIP: <YOUR_LAN_SUBNET>.1
-      masterIf: ens18
+      masterIf: eth0
       name: n6network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -1203,7 +1198,7 @@ free5gc-smf:
       cidr: 24
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
-      masterIf: ens18
+      masterIf: eth0
       name: n9network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -1414,7 +1409,7 @@ free5gc-udm:
       cidr: 24
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
-      masterIf: ens18
+      masterIf: eth0
       name: n2network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -1422,7 +1417,7 @@ free5gc-udm:
       cidr: 24
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
-      masterIf: ens18
+      masterIf: eth0
       name: n3network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -1430,7 +1425,7 @@ free5gc-udm:
       cidr: 24
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
-      masterIf: ens18
+      masterIf: eth0
       name: n4network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -1439,7 +1434,7 @@ free5gc-udm:
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
       gatewayIP: <YOUR_LAN_SUBNET>.1
-      masterIf: ens18
+      masterIf: eth0
       name: n6network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -1447,7 +1442,7 @@ free5gc-udm:
       cidr: 24
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
-      masterIf: ens18
+      masterIf: eth0
       name: n9network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -1569,7 +1564,7 @@ free5gc-udr:
       cidr: 24
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
-      masterIf: ens18
+      masterIf: eth0
       name: n2network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -1577,7 +1572,7 @@ free5gc-udr:
       cidr: 24
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
-      masterIf: ens18
+      masterIf: eth0
       name: n3network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -1585,7 +1580,7 @@ free5gc-udr:
       cidr: 24
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
-      masterIf: ens18
+      masterIf: eth0
       name: n4network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -1594,7 +1589,7 @@ free5gc-udr:
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
       gatewayIP: <YOUR_LAN_SUBNET>.1
-      masterIf: ens18
+      masterIf: eth0
       name: n6network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -1602,7 +1597,7 @@ free5gc-udr:
       cidr: 24
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
-      masterIf: ens18
+      masterIf: eth0
       name: n9network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -1705,7 +1700,7 @@ free5gc-upf:
       cidr: 24
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
-      masterIf: ens18
+      masterIf: eth0
       name: n2network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -1713,7 +1708,7 @@ free5gc-upf:
       cidr: 24
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
-      masterIf: ens18
+      masterIf: eth0
       name: n3network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -1721,7 +1716,7 @@ free5gc-upf:
       cidr: 24
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
-      masterIf: ens18
+      masterIf: eth0
       name: n4network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -1730,7 +1725,7 @@ free5gc-upf:
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
       gatewayIP: <YOUR_LAN_SUBNET>.1
-      masterIf: ens18
+      masterIf: eth0
       name: n6network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -1738,7 +1733,7 @@ free5gc-upf:
       cidr: 24
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
-      masterIf: ens18
+      masterIf: eth0
       name: n9network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -2006,7 +2001,7 @@ free5gc-webui:
       cidr: 24
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
-      masterIf: ens18
+      masterIf: eth0
       name: n2network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -2014,7 +2009,7 @@ free5gc-webui:
       cidr: 24
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
-      masterIf: ens18
+      masterIf: eth0
       name: n3network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -2022,7 +2017,7 @@ free5gc-webui:
       cidr: 24
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
-      masterIf: ens18
+      masterIf: eth0
       name: n4network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -2031,7 +2026,7 @@ free5gc-webui:
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
       gatewayIP: <YOUR_LAN_SUBNET>.1
-      masterIf: ens18
+      masterIf: eth0
       name: n6network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -2039,7 +2034,7 @@ free5gc-webui:
       cidr: 24
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
-      masterIf: ens18
+      masterIf: eth0
       name: n9network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -2144,7 +2139,7 @@ global:
     cidr: 24
     enabled: true
     excludeIP: <YOUR_LAN_SUBNET>.254
-    masterIf: ens18
+    masterIf: eth0
     name: n2network
     subnetIP: <YOUR_LAN_SUBNET>.0
     type: macvlan
@@ -2152,7 +2147,7 @@ global:
     cidr: 24
     enabled: true
     excludeIP: <YOUR_LAN_SUBNET>.254
-    masterIf: ens18
+    masterIf: eth0
     name: n3network
     subnetIP: <YOUR_LAN_SUBNET>.0
     type: macvlan
@@ -2160,7 +2155,7 @@ global:
     cidr: 24
     enabled: true
     excludeIP: <YOUR_LAN_SUBNET>.254
-    masterIf: ens18
+    masterIf: eth0
     name: n4network
     subnetIP: <YOUR_LAN_SUBNET>.0
     type: macvlan
@@ -2169,7 +2164,7 @@ global:
     enabled: true
     excludeIP: <YOUR_LAN_SUBNET>.254
     gatewayIP: <YOUR_LAN_SUBNET>.1
-    masterIf: ens18
+    masterIf: eth0
     name: n6network
     subnetIP: <YOUR_LAN_SUBNET>.0
     type: macvlan
@@ -2177,7 +2172,7 @@ global:
     cidr: 24
     enabled: true
     excludeIP: <YOUR_LAN_SUBNET>.254
-    masterIf: ens18
+    masterIf: eth0
     name: n9network
     subnetIP: <YOUR_LAN_SUBNET>.0
     type: macvlan
@@ -2275,7 +2270,7 @@ mongodb:
         cidr: 24
         enabled: true
         excludeIP: <YOUR_LAN_SUBNET>.254
-        masterIf: ens18
+        masterIf: eth0
         name: n2network
         subnetIP: <YOUR_LAN_SUBNET>.0
         type: macvlan
@@ -2283,7 +2278,7 @@ mongodb:
         cidr: 24
         enabled: true
         excludeIP: <YOUR_LAN_SUBNET>.254
-        masterIf: ens18
+        masterIf: eth0
         name: n3network
         subnetIP: <YOUR_LAN_SUBNET>.0
         type: macvlan
@@ -2291,7 +2286,7 @@ mongodb:
         cidr: 24
         enabled: true
         excludeIP: <YOUR_LAN_SUBNET>.254
-        masterIf: ens18
+        masterIf: eth0
         name: n4network
         subnetIP: <YOUR_LAN_SUBNET>.0
         type: macvlan
@@ -2300,7 +2295,7 @@ mongodb:
         enabled: true
         excludeIP: <YOUR_LAN_SUBNET>.254
         gatewayIP: <YOUR_LAN_SUBNET>.1
-        masterIf: ens18
+        masterIf: eth0
         name: n6network
         subnetIP: <YOUR_LAN_SUBNET>.0
         type: macvlan
@@ -2308,7 +2303,7 @@ mongodb:
         cidr: 24
         enabled: true
         excludeIP: <YOUR_LAN_SUBNET>.254
-        masterIf: ens18
+        masterIf: eth0
         name: n9network
         subnetIP: <YOUR_LAN_SUBNET>.0
         type: macvlan
@@ -2388,7 +2383,7 @@ mongodb:
       cidr: 24
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
-      masterIf: ens18
+      masterIf: eth0
       name: n2network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -2396,7 +2391,7 @@ mongodb:
       cidr: 24
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
-      masterIf: ens18
+      masterIf: eth0
       name: n3network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -2404,7 +2399,7 @@ mongodb:
       cidr: 24
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
-      masterIf: ens18
+      masterIf: eth0
       name: n4network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -2413,7 +2408,7 @@ mongodb:
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
       gatewayIP: <YOUR_LAN_SUBNET>.1
-      masterIf: ens18
+      masterIf: eth0
       name: n6network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -2421,7 +2416,7 @@ mongodb:
       cidr: 24
       enabled: true
       excludeIP: <YOUR_LAN_SUBNET>.254
-      masterIf: ens18
+      masterIf: eth0
       name: n9network
       subnetIP: <YOUR_LAN_SUBNET>.0
       type: macvlan
@@ -2449,7 +2444,7 @@ mongodb:
   initdbScripts: {}
   labels: {}
   livenessProbe:
-    enabled: false
+    enabled: true
     failureThreshold: 6
     initialDelaySeconds: 30
     periodSeconds: 10
@@ -2509,7 +2504,7 @@ mongodb:
     accessModes:
     - ReadWriteOnce
     annotations: {}
-    enabled: false
+    enabled: true
     mountPath: /bitnami/mongodb/data/db/
     size: 6Gi
     subPath: ""
@@ -2521,7 +2516,7 @@ mongodb:
   podLabels: {}
   podManagementPolicy: OrderedReady
   podSecurityContext:
-    enabled: false
+    enabled: true
     fsGroup: 999
     sysctls: []
   podSecurityPolicy:
@@ -2532,7 +2527,7 @@ mongodb:
   rbac:
     create: false
   readinessProbe:
-    enabled: false
+    enabled: true
     failureThreshold: 6
     initialDelaySeconds: 5
     periodSeconds: 10

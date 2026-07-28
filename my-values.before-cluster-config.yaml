@@ -113,11 +113,6 @@ free5gc-amf:
           enable: true     # true or false
           expireTime: 6s   # default is 6 seconds
           maxRetryTimes: 4 # the max number of retransmission
-        # retransmission timer for NAS Configuration Update Command
-        t3555:
-          enable: true
-          expireTime: 6s
-          maxRetryTimes: 4
         # retransmission timer for NAS Authentication Request/Security Mode Command message
         t3560:
           enable: true     # true or false
@@ -2449,7 +2444,7 @@ mongodb:
   initdbScripts: {}
   labels: {}
   livenessProbe:
-    enabled: false
+    enabled: true
     failureThreshold: 6
     initialDelaySeconds: 30
     periodSeconds: 10
@@ -2509,7 +2504,7 @@ mongodb:
     accessModes:
     - ReadWriteOnce
     annotations: {}
-    enabled: false
+    enabled: true
     mountPath: /bitnami/mongodb/data/db/
     size: 6Gi
     subPath: ""
@@ -2521,7 +2516,7 @@ mongodb:
   podLabels: {}
   podManagementPolicy: OrderedReady
   podSecurityContext:
-    enabled: false
+    enabled: true
     fsGroup: 999
     sysctls: []
   podSecurityPolicy:
@@ -2532,7 +2527,7 @@ mongodb:
   rbac:
     create: false
   readinessProbe:
-    enabled: false
+    enabled: true
     failureThreshold: 6
     initialDelaySeconds: 5
     periodSeconds: 10
