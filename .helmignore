@@ -1,8 +1,0 @@
-.git/
-.gitignore
-.helmignore
-dist/
-*.backup
-*.bak
-my-*.yaml
-

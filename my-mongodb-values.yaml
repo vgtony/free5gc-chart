@@ -1,3 +1,0 @@
-mongodb:
-  image:
-    tag: "5.0"
