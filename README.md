@@ -1,236 +1,143 @@
-# free5GC Helm chart
+# free5GC on Kubernetes
 
-This chart deploys a free5GC core with MongoDB and optional ULCL user-plane topology. It is based on [Costasgk/free5gc-chart](https://github.com/Costasgk/free5gc-chart) and includes compatibility fixes proven on a Kubernetes cluster using Multus:
+Tested with Ubuntu 24.04, Kubernetes 1.36, containerd, Flannel, Helm 3.21.3,
+Multus thick plugin, free5GC v3.3.0, and `gtp5g` v0.8.10.
 
-- MongoDB 6 uses TCP health probes instead of the removed `mongo` shell.
-- AMF configuration includes the required `T3555` timer.
-- The ULCL example defines one SMF topology and three consistent PFCP peers.
+Run the **All nodes** sections on every control-plane and worker node. Run the
+remaining sections on the control-plane node unless stated otherwise.
 
-The chart cannot choose valid Multus addresses for an unknown network. You must create a values file for your cluster before installing.
-
-## Components
-
-AMF, AUSF, NRF, NSSF, PCF, SMF, UDM, UDR, UPF, WebUI, DBPython, MongoDB, and optionally N3IWF.
-
-## Prerequisites
-
-- Kubernetes with working pod networking and DNS.
-- Helm 3 and `kubectl`.
-- Multus installed on every node that may run AMF, SMF, UPF, or N3IWF.
-- The `macvlan`, `ipvlan`, `static`, and `tuning` CNI binaries on those nodes.
-- `gtp5g` 0.8.x on every UPF node. The bundled free5GC v3.3.0 UPF rejects
-  `gtp5g` versions older than 0.8.1 and versions 0.9.0 or newer.
-- SCTP kernel support for AMF N2/NGAP.
-- A default StorageClass, or a pre-created PersistentVolume for MongoDB.
-- A physical parent interface with the same name on every selected node.
-
-Check the cluster:
+## 1. Prepare every node
 
 ```bash
-kubectl get nodes -o wide
-kubectl get pods -n kube-system | grep multus
-kubectl get storageclass
+sudo swapoff -a
+sudo sed -i '/ swap / s/^/#/' /etc/fstab
+
+cat <<'EOF_MODULES' | sudo tee /etc/modules-load.d/k8s.conf
+overlay
+br_netfilter
+EOF_MODULES
+sudo modprobe overlay
+sudo modprobe br_netfilter
+
+cat <<'EOF_SYSCTL' | sudo tee /etc/sysctl.d/99-kubernetes-cri.conf
+net.bridge.bridge-nf-call-iptables  = 1
+net.bridge.bridge-nf-call-ip6tables = 1
+net.ipv4.ip_forward                 = 1
+EOF_SYSCTL
+sudo sysctl --system
+
+sudo apt-get update
+sudo apt-get install -y containerd curl gpg git
+sudo mkdir -p /etc/containerd
+containerd config default | sudo tee /etc/containerd/config.toml >/dev/null
+sudo sed -i 's/SystemdCgroup = false/SystemdCgroup = true/' /etc/containerd/config.toml
+sudo systemctl enable --now containerd
+
+sudo mkdir -p -m 755 /etc/apt/keyrings
+curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.36/deb/Release.key | \
+  sudo gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+printf '%s\n' 'deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.36/deb/ /' | \
+  sudo tee /etc/apt/sources.list.d/kubernetes.list
+sudo apt-get update
+sudo apt-get install -y kubelet kubeadm kubectl
+sudo apt-mark hold kubelet kubeadm kubectl
 ```
 
-On every UPF node:
+## 2. Create the cluster
+
+On the control-plane node:
 
 ```bash
-ip -br link
-lsmod | grep gtp5g
-modinfo -F version gtp5g
+sudo kubeadm init --pod-network-cidr=10.244.0.0/16
+mkdir -p "$HOME/.kube"
+sudo cp /etc/kubernetes/admin.conf "$HOME/.kube/config"
+sudo chown "$(id -u):$(id -g)" "$HOME/.kube/config"
+kubectl apply -f https://github.com/flannel-io/flannel/releases/download/v0.28.8/kube-flannel.yml
+kubeadm token create --print-join-command
 ```
 
-The version command must report 0.8.x and at least `0.8.1`. The tested version is
-`0.8.10`. For a fresh build, pin the newest compatible release instead of cloning the moving default branch:
+Run the printed `sudo kubeadm join ...` command on every worker. Then verify:
 
 ```bash
-git clone --branch v0.8.10 --depth 1 https://github.com/free5gc/gtp5g.git
-make -C gtp5g
-sudo make -C gtp5g install
+kubectl get nodes
+kubectl get pods -A
+```
+
+## 3. Install Helm and cluster prerequisites
+
+```bash
+curl -fsSL -o /tmp/get-helm-3 https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3
+chmod 700 /tmp/get-helm-3
+sudo /tmp/get-helm-3 --version v3.21.3
+
+kubectl apply -f https://raw.githubusercontent.com/rancher/local-path-provisioner/v0.0.36/deploy/local-path-storage.yaml
+kubectl rollout status -n local-path-storage deployment/local-path-provisioner --timeout=2m
+kubectl patch storageclass local-path -p '{"metadata":{"annotations":{"storageclass.kubernetes.io/is-default-class":"true"}}}'
+
+kubectl apply -f https://raw.githubusercontent.com/k8snetworkplumbingwg/multus-cni/6386911021ffb0715b930a2d372f2aa16084e78f/deployments/multus-daemonset-thick.yml
+kubectl rollout status -n kube-system daemonset/kube-multus-ds --timeout=3m
+```
+
+Confirm every relevant node has `macvlan`, `ipvlan`, `static`, and `tuning` in
+`/opt/cni/bin`.
+
+## 4. Install gtp5g on every UPF node
+
+The bundled UPF rejects gtp5g 0.9.x and newer. Install the pinned version on each
+node that can run a UPF:
+
+```bash
+sudo apt-get update
+sudo apt-get install -y gcc make git linux-headers-"$(uname -r)"
+git clone --branch v0.8.10 --depth 1 https://github.com/free5gc/gtp5g.git /tmp/gtp5g
+make -C /tmp/gtp5g
+sudo make -C /tmp/gtp5g install
 sudo depmod -a
 sudo modprobe gtp5g
 echo gtp5g | sudo tee /etc/modules-load.d/gtp5g.conf
+modinfo -F version gtp5g
+rm -rf /tmp/gtp5g
 ```
 
-Build and install the module separately on every UPF node whose kernel version
-differs. Building the current `gtp5g` default branch is not supported by the
-bundled UPF image.
+The final command must print `0.8.10`.
 
-## 1. Create cluster values
-
-Copy the supplied template; do not edit `values.yaml` for each installation:
+## 5. Install free5GC
 
 ```bash
-cp values.example.yaml my-values.yaml
+git clone --branch free5gc-chart --single-branch https://github.com/vgtony/free5gc-chart.git
+cd free5gc-chart
 ```
 
-Replace every `<YOUR_...>` placeholder:
+Review `my-values.yaml` and `my-ulcl-values.yaml`. Set the node interface name,
+static Multus addresses, node selectors, and image registry for your environment.
+For the committed topology, label the UPF workers:
 
 ```bash
-grep -n '<YOUR_' my-values.yaml
+kubectl label node <psa1-node> free5gc-node=psa1 --overwrite
+kubectl label node <psa2-node> free5gc-node=psa2 --overwrite
+kubectl label node <branching-upf-node> free5gc-node=iupf --overwrite
 ```
 
-The command must return no output before installation.
-
-### Multus address plan
-
-Each static address must belong to its configured subnet, be unused and unique, and be reachable at layer 2 from every node that may host the pod.
-
-| Purpose | Value |
-| --- | --- |
-| Parent NIC on every relevant node | `global.n2network.masterIf` through `global.n9network.masterIf` |
-| AMF N2 address | `global.amf.n2if.ipAddress` |
-| SMF N4 address | `global.smf.n4if.ipAddress` |
-| Single-UPF N3/N4/N6 | `free5gc-upf.upf.*if.ipAddress` |
-| Branching UPF N3/N4/N6/N9 | `free5gc-upf.upfb.*if.ipAddress` |
-| Anchor UPF 1 N4/N6/N9 | `free5gc-upf.upf1.*if.ipAddress` |
-| Anchor UPF 2 N4/N6/N9 | `free5gc-upf.upf2.*if.ipAddress` |
-| N6 data-network gateway | `global.n6network.gatewayIP` |
-| UE address pools | SMF `dnnUpfInfoList[].pools` and UPF `dnnList[].cidr` |
-
-`subnetIP` is the network address, not a pod address. `cidr` is the prefix length. For example:
-
-```yaml
-global:
-  n4network:
-    masterIf: ens18
-    subnetIP: 10.20.30.0
-    cidr: 24
-  smf:
-    n4if:
-      ipAddress: 10.20.30.10
-
-free5gc-upf:
-  upfb:
-    n4if:
-      ipAddress: 10.20.30.11
-```
-
-Do not copy sample IPs unless that subnet is routed on your nodes. Avoid a default gateway on N3, N4, or N9 unless the network design requires it; multiple default routes commonly break pod connectivity.
-
-### macvlan versus ipvlan
-
-Use the type supported by your network:
-
-```yaml
-global:
-  n2network:
-    type: macvlan
-    masterIf: ens18
-```
-
-Some switches or virtualized networks reject multiple MAC addresses behind one port. In that case use `ipvlan` if the environment supports it. All scheduled nodes must have the configured `masterIf`.
-
-### ULCL node placement
-
-The example uses these node labels:
+Validate and install:
 
 ```bash
-kubectl label node <branching-node> free5gc-node=iupf
-kubectl label node <anchor-1-node> free5gc-node=psa1
-kubectl label node <anchor-2-node> free5gc-node=psa2
-```
-
-Remove or change the matching `nodeSelector` entries if you use a different placement model.
-
-The SMF topology addresses must exactly equal the corresponding UPF interfaces:
-
-- `BranchingUPF.nodeID`/`addr` = `upfb.n4if.ipAddress`
-- `AnchorUPF1.nodeID`/`addr` = `upf1.n4if.ipAddress`
-- `AnchorUPF2.nodeID`/`addr` = `upf2.n4if.ipAddress`
-- Every SMF N3/N9 endpoint = the matching UPF N3/N9 address.
-
-Never define `free5gc-smf:` twice in one YAML file; duplicate YAML keys silently discard configuration in common parsers.
-
-### Images
-
-The example references locally patched AMF, AUSF, and SMF images. Change their `image.name` and `image.tag` to images available to your cluster. For a private registry, create an image pull secret and set `imagePullSecrets`.
-
-## 2. Validate and install
-
-```bash
-helm lint . -f my-values.yaml
-helm template free5gc . -n free5gc -f my-values.yaml >/tmp/free5gc-rendered.yaml
+helm lint . -f my-values.yaml -f my-ulcl-values.yaml
+helm template free5gc . -n free5gc -f my-values.yaml -f my-ulcl-values.yaml >/tmp/free5gc.yaml
 kubectl create namespace free5gc --dry-run=client -o yaml | kubectl apply -f -
-kubectl apply --dry-run=server -f /tmp/free5gc-rendered.yaml
-helm upgrade --install free5gc . \
-  --namespace free5gc \
-  --create-namespace \
-  -f my-values.yaml \
-  --timeout 10m \
-  --wait
+kubectl apply --dry-run=server -f /tmp/free5gc.yaml
+helm upgrade --install free5gc . -n free5gc \
+  -f my-values.yaml -f my-ulcl-values.yaml \
+  --timeout 10m --wait
 ```
 
-For the packaged chart, replace `.` with `./free5gc-1.1.8.tgz`.
-
-## 3. Verify
+Verify:
 
 ```bash
 kubectl get pods -n free5gc
 helm status free5gc -n free5gc
-kubectl get network-attachment-definitions -n free5gc
-```
-
-Every workload should show `Running` and `1/1`.
-
-Verify Multus attachments:
-
-```bash
-kubectl get pods -n free5gc -o jsonpath='{range .items[*]}{.metadata.name}{"\n"}{.metadata.annotations.k8s\.v1\.cni\.cncf\.io/network-status}{"\n\n"}{end}'
-```
-
-Verify AMF N2:
-
-```bash
 kubectl logs -n free5gc deployment/free5gc-free5gc-amf-amf | grep 'Listen on .*:38412'
-```
-
-Verify ULCL PFCP associations:
-
-```bash
 kubectl logs -n free5gc deployment/free5gc-free5gc-smf-smf | grep 'setup association'
 ```
 
-If a ConfigMap changes but its pod does not restart, restart only that deployment:
-
-```bash
-kubectl rollout restart -n free5gc deployment/<deployment-name>
-kubectl rollout status -n free5gc deployment/<deployment-name>
-```
-
-## Troubleshooting
-
-For `Init:0/1` on most control-plane pods, inspect MongoDB:
-
-```bash
-kubectl describe pod -n free5gc mongodb-0
-kubectl logs -n free5gc mongodb-0
-```
-
-For `FailedCreatePodSandBox` or Multus errors:
-
-```bash
-kubectl describe pod -n free5gc <pod>
-kubectl get network-attachment-definitions -n free5gc -o yaml
-```
-
-Confirm `masterIf` exists on the selected node and the static IP is unused and inside the configured subnet.
-
-SMF PFCP retry timeouts mean its topology N4 address does not match a reachable UPF N4 address. Compare SMF logs with each pod's Multus `network-status`.
-
-AMF `invalid T3555` means an older values file replaced the fixed AMF configuration. Add the timer shown in `values.example.yaml`.
-
-## Upgrade and uninstall
-
-```bash
-helm upgrade free5gc . -n free5gc -f my-values.yaml --timeout 10m --wait
-helm uninstall free5gc -n free5gc
-```
-
-Uninstalling does not necessarily delete MongoDB PVCs. Review them explicitly:
-
-```bash
-kubectl get pvc -n free5gc
-```
-
-See [LOCAL-CHANGES.md](./LOCAL-CHANGES.md) for the repair history.
+All workloads should be `1/1 Running`; SMF should associate with all configured
+UPFs.

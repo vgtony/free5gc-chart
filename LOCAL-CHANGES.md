@@ -82,6 +82,14 @@ The bundled free5GC v3.3.0 UPF accepts `gtp5g` versions from 0.8.1 through the
 pin `gtp5g` v0.8.10 on every UPF node. This requirement is documented in
 `README.md`.
 
+### 6. Startup readiness and installation path
+
+NRF and WebUI readiness probes now wait five seconds before their first HTTP
+request, preventing harmless startup warnings observed during clean installs. The
+root `README.md` was reduced to one tested, pinned Ubuntu/kubeadm installation
+path covering containerd, Kubernetes, Flannel, Helm, storage, Multus, gtp5g, and
+the chart.
+
 ## Changes that were already present
 
 These tracked changes existed before Codex investigated the deployment and were

@@ -648,7 +648,7 @@ free5gc-nrf:
     podSecurityContext: {}
     readinessProbe:
       failureThreshold: 40
-      initialDelaySeconds: 0
+      initialDelaySeconds: 5
       periodSeconds: 1
       successThreshold: 1
       timeoutSeconds: 1
@@ -2109,7 +2109,7 @@ free5gc-webui:
     podSecurityContext: {}
     readinessProbe:
       failureThreshold: 40
-      initialDelaySeconds: 0
+      initialDelaySeconds: 5
       periodSeconds: 1
       successThreshold: 1
       timeoutSeconds: 1
