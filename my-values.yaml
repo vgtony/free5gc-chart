@@ -1960,7 +1960,7 @@ free5gc-upf:
     n4if:
       ipAddress: 10.160.101.203
     n6if:
-      ipAddress: 10.160.101.204
+      ipAddress: 10.160.101.218
     n9if:
       ipAddress: 10.160.101.204
     name: upfb
