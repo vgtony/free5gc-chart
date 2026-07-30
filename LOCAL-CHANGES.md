@@ -63,15 +63,32 @@ The SMF deployment was restarted because this old chart does not put a ConfigMap
 checksum in the pod template and therefore does not restart automatically when its
 configuration changes.
 
+### 4. UPF-B N6 restoration
+
+Files:
+
+- `charts/free5gc-upf/templates/upfb/upfb-deployment.yaml`
+- `charts/free5gc-upf/templates/upfb/upfb-configmap.yaml`
+- `my-values.yaml`
+
+The repository-compatible UPF-B N6 attachment and masquerade rule were restored.
+UPF-B now uses unique interface addresses: N3 `10.160.101.202`, N4
+`10.160.101.203`, N9 `10.160.101.204`, and N6 `10.160.101.218`.
+
+### 5. gtp5g compatibility
+
+The bundled free5GC v3.3.0 UPF accepts `gtp5g` versions from 0.8.1 through the
+0.8.x series and rejects current 0.9.x/0.10.x releases. Fresh installations must
+pin `gtp5g` v0.8.10 on every UPF node. This requirement is documented in
+`README.md`.
+
 ## Changes that were already present
 
 These tracked changes existed before Codex investigated the deployment and were
 preserved:
 
-- `charts/free5gc-upf/templates/upfb/upfb-deployment.yaml`: removes the UPF-B N6
-  Multus attachment.
-- `charts/free5gc-upf/templates/upfb/upfb-configmap.yaml`: removes the UPF-B N6
-  masquerade rule.
+- Earlier versions of the local branch removed UPF-B's N6 attachment and
+  masquerade rule. Section 4 documents their subsequent restoration.
 - The local `*.backup`, `my-*.yaml`, custom registry/image, node labels, addresses,
   and subnet configuration also predated this repair except for the specific changes
   documented above.

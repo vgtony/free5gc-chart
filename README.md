@@ -18,7 +18,8 @@ AMF, AUSF, NRF, NSSF, PCF, SMF, UDM, UDR, UPF, WebUI, DBPython, MongoDB, and opt
 - Helm 3 and `kubectl`.
 - Multus installed on every node that may run AMF, SMF, UPF, or N3IWF.
 - The `macvlan`, `ipvlan`, `static`, and `tuning` CNI binaries on those nodes.
-- The `gtp5g` kernel module on every UPF node.
+- `gtp5g` 0.8.x on every UPF node. The bundled free5GC v3.3.0 UPF rejects
+  `gtp5g` versions older than 0.8.1 and versions 0.9.0 or newer.
 - SCTP kernel support for AMF N2/NGAP.
 - A default StorageClass, or a pre-created PersistentVolume for MongoDB.
 - A physical parent interface with the same name on every selected node.
@@ -36,7 +37,24 @@ On every UPF node:
 ```bash
 ip -br link
 lsmod | grep gtp5g
+modinfo -F version gtp5g
 ```
+
+The version command must report 0.8.x and at least `0.8.1`. The tested version is
+`0.8.10`. For a fresh build, pin the newest compatible release instead of cloning the moving default branch:
+
+```bash
+git clone --branch v0.8.10 --depth 1 https://github.com/free5gc/gtp5g.git
+make -C gtp5g
+sudo make -C gtp5g install
+sudo depmod -a
+sudo modprobe gtp5g
+echo gtp5g | sudo tee /etc/modules-load.d/gtp5g.conf
+```
+
+Build and install the module separately on every UPF node whose kernel version
+differs. Building the current `gtp5g` default branch is not supported by the
+bundled UPF image.
 
 ## 1. Create cluster values
 
@@ -64,7 +82,7 @@ Each static address must belong to its configured subnet, be unused and unique, 
 | AMF N2 address | `global.amf.n2if.ipAddress` |
 | SMF N4 address | `global.smf.n4if.ipAddress` |
 | Single-UPF N3/N4/N6 | `free5gc-upf.upf.*if.ipAddress` |
-| Branching UPF N3/N4/N9 | `free5gc-upf.upfb.*if.ipAddress` |
+| Branching UPF N3/N4/N6/N9 | `free5gc-upf.upfb.*if.ipAddress` |
 | Anchor UPF 1 N4/N6/N9 | `free5gc-upf.upf1.*if.ipAddress` |
 | Anchor UPF 2 N4/N6/N9 | `free5gc-upf.upf2.*if.ipAddress` |
 | N6 data-network gateway | `global.n6network.gatewayIP` |
@@ -133,6 +151,8 @@ The example references locally patched AMF, AUSF, and SMF images. Change their `
 ```bash
 helm lint . -f my-values.yaml
 helm template free5gc . -n free5gc -f my-values.yaml >/tmp/free5gc-rendered.yaml
+kubectl create namespace free5gc --dry-run=client -o yaml | kubectl apply -f -
+kubectl apply --dry-run=server -f /tmp/free5gc-rendered.yaml
 helm upgrade --install free5gc . \
   --namespace free5gc \
   --create-namespace \
