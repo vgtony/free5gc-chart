@@ -1249,43 +1249,76 @@ free5gc-smf:
         plmnList: # the list of PLMN IDs that this SMF belongs to (optional, remove this key when unnecessary)
           - mcc: 208 # Mobile Country Code (3 digits string, digit: 0~9)
             mnc: 93 # Mobile Network Code (2 or 3 digits string, digit: 0~9)
-        userplaneInformation: # list of userplane information
-          upNodes: # information of userplane node (AN or UPF)
-            gNB1: # the name of the node
-              type: AN # the type of the node (AN or UPF)
-            UPF:  # the name of the node
-              type: UPF # the type of the node (AN or UPF)
-              nodeID: 10.100.50.241 # the IP/FQDN of N4 interface on this UPF (PFCP)
-              addr: 10.100.50.241 # the IP/FQDN of N4 interface on this UPF (PFCP)
-              sNssaiUpfInfos: # S-NSSAI information list for this UPF
-                    - sNssai: # S-NSSAI (Single Network Slice Selection Assistance Information)
-                        sst: 1 # Slice/Service Type (uinteger, range: 0~255)
-                        sd: 010203 # Slice Differentiator (3 bytes hex string, range: 000000~FFFFFF)
-                      dnnUpfInfoList: # DNN information list for this S-NSSAI
-                        - dnn: internet
-                          pools:
-                            - cidr: 10.1.0.0/17
-                          staticPools:
-                            - cidr: 10.1.64.0/24
-                    - sNssai: # S-NSSAI (Single Network Slice Selection Assistance Information)
-                        sst: 1 # Slice/Service Type (uinteger, range: 0~255)
-                        sd: 112233 # Slice Differentiator (3 bytes hex string, range: 000000~FFFFFF)
-                      dnnUpfInfoList: # DNN information list for this S-NSSAI
-                        - dnn: internet
-                          pools:
-                            - cidr: 10.1.128.0/17
-                          staticPools:
-                            - cidr: 10.1.192.0/24
-              interfaces: # Interface list for this UPF
-                    - interfaceType: N3 # the type of the interface (N3 or N9)
-                      endpoints: # the IP address of this N3/N9 interface on this UPF
-                        - 10.100.50.233
-                      networkInstances:
-                        - internet # Data Network Name (DNN)
-          links: # the topology graph of userplane, A and B represent the two nodes of each link
+        userplaneInformation:
+          upNodes:
+            gNB1:
+              type: AN
+            BranchingUPF:
+              type: UPF
+              nodeID: 10.160.101.203
+              addr: 10.160.101.203
+              sNssaiUpfInfos:
+                - sNssai:
+                    sst: 1
+                    sd: 010203
+                  dnnUpfInfoList:
+                    - dnn: internet
+              interfaces:
+                - interfaceType: N3
+                  endpoints:
+                    - 10.160.101.202
+                  networkInstances:
+                    - internet
+                - interfaceType: N9
+                  endpoints:
+                    - 10.160.101.204
+                  networkInstances:
+                    - internet
+            AnchorUPF1:
+              type: UPF
+              nodeID: 10.160.101.205
+              addr: 10.160.101.205
+              sNssaiUpfInfos:
+                - sNssai:
+                    sst: 1
+                    sd: 010203
+                  dnnUpfInfoList:
+                    - dnn: internet
+                      pools:
+                        - cidr: 10.61.0.0/16
+              interfaces:
+                - interfaceType: N9
+                  endpoints:
+                    - 10.160.101.206
+                  networkInstances:
+                    - internet
+            AnchorUPF2:
+              type: UPF
+              nodeID: 10.160.101.209
+              addr: 10.160.101.209
+              sNssaiUpfInfos:
+                - sNssai:
+                    sst: 1
+                    sd: 010203
+                  dnnUpfInfoList:
+                    - dnn: internet
+                      pools:
+                        - cidr: 10.62.0.0/16
+              interfaces:
+                - interfaceType: N9
+                  endpoints:
+                    - 10.160.101.210
+                  networkInstances:
+                    - internet
+          links:
             - A: gNB1
-              B: UPF
-        locality: area1 # Name of the location where a set of AMF, SMF and UPFs are located
+              B: BranchingUPF
+            - A: BranchingUPF
+              B: AnchorUPF1
+            - A: BranchingUPF
+              B: AnchorUPF2
+        ulcl: true
+        locality: area1
 
         t3591:
           enable: true     # true or false
@@ -1794,7 +1827,16 @@ free5gc-upf:
     volume:
       mount: /free5gc/config/
   upf1:
-    affinity: {}
+    affinity: &ulclUpfAffinity
+      podAntiAffinity:
+        requiredDuringSchedulingIgnoredDuringExecution:
+          - labelSelector:
+              matchExpressions:
+                - key: app.kubernetes.io/name
+                  operator: In
+                  values:
+                    - free5gc-upf
+            topologyKey: kubernetes.io/hostname
     autoscaling:
       enabled: false
       maxReplicas: 100
@@ -1822,14 +1864,13 @@ free5gc-upf:
       successThreshold: 1
       timeoutSeconds: 10
     n4if:
-      ipAddress: 10.160.101.121
+      ipAddress: 10.160.101.205
     n6if:
-      ipAddress: 10.160.101.123
+      ipAddress: 10.160.101.207
     n9if:
-      ipAddress: 10.160.101.122
+      ipAddress: 10.160.101.206
     name: upf1
-    nodeSelector:
-      free5gc-node: psa1
+    nodeSelector: {}
     podAnnotations: {}
     podSecurityContext: {}
     readinessProbe:
@@ -1851,7 +1892,7 @@ free5gc-upf:
     volume:
       mount: /free5gc/config/
   upf2:
-    affinity: {}
+    affinity: *ulclUpfAffinity
     autoscaling:
       enabled: false
       maxReplicas: 100
@@ -1879,14 +1920,13 @@ free5gc-upf:
       successThreshold: 1
       timeoutSeconds: 10
     n4if:
-      ipAddress: 10.160.101.131
+      ipAddress: 10.160.101.209
     n6if:
-      ipAddress: 10.160.101.133
+      ipAddress: 10.160.101.212
     n9if:
-      ipAddress: 10.160.101.132
+      ipAddress: 10.160.101.210
     name: upf2
-    nodeSelector:
-      free5gc-node: psa2
+    nodeSelector: {}
     podAnnotations: {}
     podSecurityContext: {}
     readinessProbe:
@@ -1908,7 +1948,7 @@ free5gc-upf:
     volume:
       mount: /free5gc/config/
   upfb:
-    affinity: {}
+    affinity: *ulclUpfAffinity
     autoscaling:
       enabled: false
       maxReplicas: 100
@@ -1936,16 +1976,15 @@ free5gc-upf:
       successThreshold: 1
       timeoutSeconds: 10
     n3if:
-      ipAddress: 10.160.101.111
+      ipAddress: 10.160.101.202
     n4if:
-      ipAddress: 10.160.101.112
+      ipAddress: 10.160.101.203
     n6if:
-      ipAddress: 10.160.101.113
+      ipAddress: 10.160.101.218
     n9if:
-      ipAddress: 10.160.101.113
+      ipAddress: 10.160.101.204
     name: upfb
-    nodeSelector:
-      free5gc-node: iupf
+    nodeSelector: {}
     podAnnotations: {}
     podSecurityContext: {}
     readinessProbe:
@@ -2124,7 +2163,8 @@ global:
     cidr: 24
     enabled: true
     excludeIP: 10.160.101.254
-    masterIf: ens18
+    gatewayIP: 10.160.101.1
+    masterIf: eth0
     name: n2network
     subnetIP: 10.160.101.0
     type: macvlan
@@ -2132,7 +2172,8 @@ global:
     cidr: 24
     enabled: true
     excludeIP: 10.160.101.254
-    masterIf: ens18
+    gatewayIP: 10.160.101.1
+    masterIf: eth0
     name: n3network
     subnetIP: 10.160.101.0
     type: macvlan
@@ -2140,7 +2181,8 @@ global:
     cidr: 24
     enabled: true
     excludeIP: 10.160.101.254
-    masterIf: ens18
+    gatewayIP: 10.160.101.1
+    masterIf: eth0
     name: n4network
     subnetIP: 10.160.101.0
     type: macvlan
@@ -2149,7 +2191,7 @@ global:
     enabled: true
     excludeIP: 10.160.101.254
     gatewayIP: 10.160.101.1
-    masterIf: ens18
+    masterIf: eth0
     name: n6network
     subnetIP: 10.160.101.0
     type: macvlan
@@ -2157,7 +2199,8 @@ global:
     cidr: 24
     enabled: true
     excludeIP: 10.160.101.254
-    masterIf: ens18
+    gatewayIP: 10.160.101.1
+    masterIf: eth0
     name: n9network
     subnetIP: 10.160.101.0
     type: macvlan

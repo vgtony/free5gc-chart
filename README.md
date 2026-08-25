@@ -108,25 +108,21 @@ git clone --branch free5gc-chart --single-branch https://github.com/vgtony/free5
 cd free5gc-chart
 ```
 
-Review `my-values.yaml` and `my-ulcl-values.yaml`. Set the node interface name,
-static Multus addresses, node selectors, and image registry for your environment.
-For the committed topology, label the UPF workers:
-
-```bash
-kubectl label node <psa1-node> free5gc-node=psa1 --overwrite
-kubectl label node <psa2-node> free5gc-node=psa2 --overwrite
-kubectl label node <branching-upf-node> free5gc-node=iupf --overwrite
-```
+The chart defaults to the three-UPF ULCL topology. OSM does not need to label the
+worker nodes: required pod anti-affinity automatically places the three UPFs on
+different hosts. The cluster therefore needs at least three schedulable workers,
+each with the `gtp5g` module, Multus plugins, and an `eth0` interface connected to
+the configured `10.160.101.0/24` network. Override `global.*network.masterIf` when
+the common worker interface has another name.
 
 Validate and install:
 
 ```bash
-helm lint . -f my-values.yaml -f my-ulcl-values.yaml
-helm template free5gc . -n free5gc -f my-values.yaml -f my-ulcl-values.yaml >/tmp/free5gc.yaml
+helm lint .
+helm template free5gc . -n free5gc >/tmp/free5gc.yaml
 kubectl create namespace free5gc --dry-run=client -o yaml | kubectl apply -f -
 kubectl apply --dry-run=server -f /tmp/free5gc.yaml
 helm upgrade --install free5gc . -n free5gc \
-  -f my-values.yaml -f my-ulcl-values.yaml \
   --timeout 10m --wait
 ```
 

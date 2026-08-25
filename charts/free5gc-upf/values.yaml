@@ -163,7 +163,9 @@ upf1:
     timeoutSeconds: 10
     failureThreshold: 3
     successThreshold: 1
-  nodeSelector: { free5gc-node: psa1 }
+  # The umbrella chart spreads ULCL UPFs with pod anti-affinity, so OSM does
+  # not need to label worker nodes before instantiation.
+  nodeSelector: {}
   tolerations: []
   affinity: {}
   autoscaling:
@@ -227,7 +229,7 @@ upf2:
     timeoutSeconds: 10
     failureThreshold: 3
     successThreshold: 1
-  nodeSelector: { free5gc-node: psa2 }
+  nodeSelector: {}
   tolerations: []
   affinity: {}
   autoscaling:
@@ -293,7 +295,7 @@ upfb:
     timeoutSeconds: 10
     failureThreshold: 3
     successThreshold: 1
-  nodeSelector: { free5gc-node: iupf }
+  nodeSelector: {}
   tolerations: []
   affinity: {}
   autoscaling:

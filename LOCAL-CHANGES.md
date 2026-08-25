@@ -6,6 +6,19 @@ Release: `free5gc`, namespace `free5gc`
 
 ## What Codex changed
 
+### 0. Automated OSM ULCL defaults (chart 1.1.9)
+
+The default chart now renders the complete BranchingUPF/AnchorUPF1/AnchorUPF2
+SMF graph and matching static interface addresses. Hard-coded worker labels were
+removed. Required pod anti-affinity spreads the three UPFs across three worker
+hosts automatically. Global Multus defaults now use `eth0` and provide an
+in-subnet gateway for every rendered attachment.
+
+OSM can onboard `dist/free5gc-1.1.9.tgz` without passing the former local values
+files. The Kubernetes workers must still provide the host-level prerequisites:
+Multus CNI plugins, the `gtp5g` kernel module, and a common `eth0` interface on the
+configured secondary network.
+
 ### 1. MongoDB probes
 
 File: `my-values.yaml`
