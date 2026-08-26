@@ -26,13 +26,7 @@ spec:
           "master": {{ .masterIf | quote }},
           "mode": "bridge",
           "ipam": {
-            "type": "static",
-            "routes": [
-              {
-                "dst": "0.0.0.0/0",
-                "gw": "{{ .gatewayIP }}"
-              }
-            ] 
+            "type": "static" 
           }
         }, {
           "capabilities": { "mac": true },

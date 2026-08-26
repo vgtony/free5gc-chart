@@ -36,20 +36,17 @@ spec:
         {{- if not $.Values.global.amf.service.ngap.enabled }}
             { "name": "{{ $.Values.global.n2network.name }}-{{ .name }}",
               "interface": "n2",
-              "ips": [ "{{ .n2if.ipAddress }}/{{ $.Values.global.n2network.cidr }}" ],
-              "gateway": [ "{{ $.Values.global.n2network.gatewayIP }}" ]
+              "ips": [ "{{ .n2if.ipAddress }}/{{ $.Values.global.n2network.cidr }}" ]
             },
         {{- end }}
             { "name": "{{ $.Values.global.n3network.name }}-{{ .name }}",
               "interface": "n3",
-              "ips": [ "{{ .n3if.ipAddress }}/{{ $.Values.global.n3network.cidr }}" ],
-              "gateway": [ "{{ $.Values.global.n3network.gatewayIP }}" ]
+              "ips": [ "{{ .n3if.ipAddress }}/{{ $.Values.global.n3network.cidr }}" ]
             },
 
             { "name": "{{ .ike.name }}-{{ .name }}",
               "interface": "ike",
-              "ips": [ "{{ .ike.ipAddress }}/{{ .ike.cidr }}" ],
-              "gateway": [ "{{ .ike.gatewayIP }}" ]
+              "ips": [ "{{ .ike.ipAddress }}/{{ .ike.cidr }}" ]
             }            
             ]'
         checksum/config: {{ include (print $.Template.BasePath "/n3iwf-configmap.yaml") $ | sha256sum }}

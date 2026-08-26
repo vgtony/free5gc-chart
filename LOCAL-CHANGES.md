@@ -6,6 +6,15 @@ Release: `free5gc`, namespace `free5gc`
 
 ## What Codex changed
 
+### 0.1. Preserve Kubernetes service routing (chart 1.1.10)
+
+Removed secondary-network default routes and Multus gateway selections from AMF,
+SMF, UPF, and optional N3IWF attachments. These routes diverted Kubernetes DNS
+traffic away from the primary pod interface, leaving AMF and SMF stuck in their
+`wait-nrf` init containers. UPF N6 internet access continues to use the dedicated
+`n6if` policy-routing table created by the UPF startup script.
+
+
 ### 0. Automated OSM ULCL defaults (chart 1.1.9)
 
 The default chart now renders the complete BranchingUPF/AnchorUPF1/AnchorUPF2
