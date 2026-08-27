@@ -6,6 +6,13 @@ Release: `free5gc`, namespace `free5gc`
 
 ## What Codex changed
 
+### 0.2. Persist official MongoDB image data (chart 1.1.10)
+
+The chart uses `docker.io/mongo:6.0`, whose default database directory is
+`/data/db`. The previous Bitnami path mounted a PVC the image did not use, so
+subscriber data was ephemeral. Version 1.1.10 mounts its 6 GiB PVC at `/data/db`.
+
+
 ### 0.1. Preserve Kubernetes service routing (chart 1.1.10)
 
 Removed secondary-network default routes and Multus gateway selections from AMF,

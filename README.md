@@ -3,6 +3,8 @@
 Tested with Ubuntu 24.04, Kubernetes 1.36, containerd, Flannel, Helm 3.21.3,
 Multus thick plugin, free5GC v3.3.0, and `gtp5g` v0.8.10.
 
+For the complete OSM and next-cluster checklist, see [NEXT-CLUSTER-OSM.md](NEXT-CLUSTER-OSM.md).
+
 Run the **All nodes** sections on every control-plane and worker node. Run the
 remaining sections on the control-plane node unless stated otherwise.
 

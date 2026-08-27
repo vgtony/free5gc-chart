@@ -577,7 +577,8 @@ free5gc-nrf:
       enabled: false
     fullnameOverride: mongodb
     persistence:
-      mountPath: /bitnami/mongodb/data/db/
+      # docker.io/mongo stores WiredTiger data here; the Bitnami path leaves the PVC unused.
+      mountPath: /data/db
       size: 6Gi
     service:
       name: mongodb
@@ -2533,7 +2534,7 @@ mongodb:
     - ReadWriteOnce
     annotations: {}
     enabled: true
-    mountPath: /bitnami/mongodb/data/db/
+    mountPath: /data/db
     size: 6Gi
     subPath: ""
     volumeClaimTemplates:
