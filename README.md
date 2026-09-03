@@ -139,3 +139,17 @@ kubectl logs -n free5gc deployment/free5gc-free5gc-smf-smf | grep 'setup associa
 
 All workloads should be `1/1 Running`; SMF should associate with all configured
 UPFs.
+
+## 6. Run UERANSIM on Church
+
+The optional `ueransim` subchart runs separate gNB and UE pods pinned to the
+`church` worker. It is disabled by default, so existing free5GC-only installs
+are unchanged.
+
+- To add only UERANSIM beside an existing core release, install
+  `./charts/ueransim` with `charts/ueransim/church-values.yaml`.
+- For a fresh combined release, install this umbrella chart with
+  `church-ueransim-values.yaml`.
+
+See [charts/ueransim/README.md](charts/ueransim/README.md) for image building,
+subscriber Secret creation, bare-process migration, and verification steps.

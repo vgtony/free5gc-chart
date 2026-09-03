@@ -11,6 +11,21 @@ deployUdm: true
 deployUdr: true
 deployUpf: true
 deployWebui: true
+deployUeransim: false
+
+# Optional RAN workloads. Keeping deployUeransim=false preserves the existing
+# free5GC-only installation unless explicitly enabled.
+ueransim:
+  image:
+    repository: 10.160.101.91:32000/ueransim
+    tag: "3.3.0"
+    pullPolicy: IfNotPresent
+  network:
+    # Verified unused on 2026-09-03. Reserve this address before deployment.
+    ipAddress: 10.160.101.231
+  nodeSelector:
+    kubernetes.io/hostname: church
+
 free5gc-amf:
   amf:
     affinity: {}

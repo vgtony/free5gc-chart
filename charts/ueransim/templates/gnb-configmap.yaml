@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "ueransim.fullname" . }}-gnb-config
+  labels:
+    {{- include "ueransim.labels" . | nindent 4 }}
+    app.kubernetes.io/component: gnb
+data:
+  gnb-config.yaml: |-
+    mcc: {{ .Values.gnb.config.mcc | quote }}
+    mnc: {{ .Values.gnb.config.mnc | quote }}
+    nci: {{ .Values.gnb.config.nci | quote }}
+    idLength: {{ .Values.gnb.config.idLength }}
+    tac: {{ .Values.gnb.config.tac }}
+
+    # The radio endpoint listens on the pod network and is exposed to the UE
+    # through the ClusterIP service. N2 and N3 share the Multus interface.
+    linkIp: 0.0.0.0
+    ngapIp: {{ required "network.ipAddress is required" .Values.network.ipAddress }}
+    gtpIp: {{ required "network.ipAddress is required" .Values.network.ipAddress }}
+
+    amfConfigs:
+      - address: {{ required "global.amf.n2if.ipAddress is required" .Values.global.amf.n2if.ipAddress }}
+        port: {{ .Values.global.amf.service.ngap.port }}
+
+    slices:
+      {{- range .Values.gnb.config.slices }}
+      - sst: {{ .sst }}
+        sd: 0x{{ trimPrefix "0x" .sd }}
+      {{- end }}
+
+    ignoreStreamIds: {{ .Values.gnb.config.ignoreStreamIds }}
+    cellAccessType: {{ .Values.gnb.config.cellAccessType }}

@@ -1,0 +1,7 @@
+apiVersion: v2
+name: ueransim
+description: UERANSIM gNB and UE workloads for a free5GC Kubernetes deployment
+type: application
+version: 0.1.0
+appVersion: "3.3.0"
+icon: https://raw.githubusercontent.com/aligungr/UERANSIM/master/.github/logo.png

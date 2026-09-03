@@ -1,0 +1,93 @@
+{{- if ne (int .Values.ue.replicaCount) 1 }}
+{{- fail "ue.replicaCount must be 1; configure unique SUPIs in separate releases to run multiple UEs" }}
+{{- end }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ueransim.fullname" . }}-ue
+  labels:
+    {{- include "ueransim.labels" . | nindent 4 }}
+    app.kubernetes.io/component: ue
+spec:
+  replicas: 1
+  strategy:
+    # Avoid two pods registering the same SUPI during an upgrade.
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "ueransim.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: ue
+  template:
+    metadata:
+      labels:
+        {{- include "ueransim.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: ue
+        project: {{ .Values.global.projectName }}
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/ue-configmap.yaml") . | sha256sum }}
+        {{- with .Values.ue.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      automountServiceAccountToken: false
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.ue.podSecurityContext | nindent 8 }}
+      containers:
+        - name: ue
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["/bin/sh", "-ec"]
+          args:
+            - |-
+              case "$UE_KEY" in ''|*[!0-9A-Fa-f]*) echo "invalid UE key" >&2; exit 1;; esac
+              case "$UE_OP" in ''|*[!0-9A-Fa-f]*) echo "invalid UE OP/OPc" >&2; exit 1;; esac
+              [ "${#UE_KEY}" -eq 32 ] || { echo "UE key must contain 32 hex characters" >&2; exit 1; }
+              [ "${#UE_OP}" -eq 32 ] || { echo "UE OP/OPc must contain 32 hex characters" >&2; exit 1; }
+
+              awk '{ gsub(/__UE_KEY__/, ENVIRON["UE_KEY"]); gsub(/__UE_OP__/, ENVIRON["UE_OP"]); print }' \
+                /ueransim/config-template/ue-config.yaml > /ueransim/run/ue-config.yaml
+
+              mkdir -p /dev/net
+              if [ ! -c /dev/net/tun ]; then
+                mknod /dev/net/tun c 10 200
+              fi
+              exec /ueransim/build/nr-ue -c /ueransim/run/ue-config.yaml
+          env:
+            - name: UE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "ue.existingAuthSecret is required" .Values.ue.existingAuthSecret }}
+                  key: key
+            - name: UE_OP
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "ue.existingAuthSecret is required" .Values.ue.existingAuthSecret }}
+                  key: op
+          securityContext:
+            {{- toYaml .Values.ue.securityContext | nindent 12 }}
+          resources:
+            {{- toYaml .Values.ue.resources | nindent 12 }}
+          volumeMounts:
+            - name: config-template
+              mountPath: /ueransim/config-template
+              readOnly: true
+            - name: runtime-config
+              mountPath: /ueransim/run
+      nodeSelector:
+        {{- toYaml .Values.nodeSelector | nindent 8 }}
+      affinity:
+        {{- toYaml .Values.affinity | nindent 8 }}
+      tolerations:
+        {{- toYaml .Values.tolerations | nindent 8 }}
+      terminationGracePeriodSeconds: 10
+      volumes:
+        - name: config-template
+          configMap:
+            name: {{ include "ueransim.fullname" . }}-ue-config
+        - name: runtime-config
+          emptyDir:
+            medium: Memory

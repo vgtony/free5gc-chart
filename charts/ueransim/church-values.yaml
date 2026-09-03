@@ -1,0 +1,29 @@
+# Values for installing only UERANSIM beside the existing free5GC release.
+global:
+  projectName: free5gc
+  n2network:
+    type: macvlan
+    masterIf: eth0
+    cidr: 24
+  amf:
+    n2if:
+      ipAddress: 10.160.101.100
+    service:
+      ngap:
+        port: 38412
+
+image:
+  repository: 10.160.101.91:32000/ueransim
+  tag: "3.3.0"
+  pullPolicy: IfNotPresent
+
+nodeSelector:
+  kubernetes.io/hostname: church
+
+network:
+  ipAddress: 10.160.101.231
+
+ue:
+  existingAuthSecret: ueransim-ue-auth
+  config:
+    supi: "imsi-208930000000003"

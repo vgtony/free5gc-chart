@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "ueransim.fullname" . }}-gnb
+  labels:
+    {{- include "ueransim.labels" . | nindent 4 }}
+    app.kubernetes.io/component: gnb
+spec:
+  type: ClusterIP
+  selector:
+    {{- include "ueransim.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: gnb
+  ports:
+    - name: radio
+      port: {{ .Values.gnb.service.port }}
+      targetPort: radio
+      protocol: UDP

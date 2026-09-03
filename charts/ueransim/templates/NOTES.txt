@@ -1,0 +1,12 @@
+UERANSIM is pinned to node(s) matching:
+{{ toYaml .Values.nodeSelector | indent 2 }}
+
+Check the workloads:
+  kubectl -n {{ .Release.Namespace }} get pods -l app.kubernetes.io/instance={{ .Release.Name }},app.kubernetes.io/name={{ include "ueransim.name" . }} -o wide
+
+Follow registration:
+  kubectl -n {{ .Release.Namespace }} logs deployment/{{ include "ueransim.fullname" . }}-gnb -f
+  kubectl -n {{ .Release.Namespace }} logs deployment/{{ include "ueransim.fullname" . }}-ue -f
+
+Test the UE data plane after uesimtun0 appears:
+  kubectl -n {{ .Release.Namespace }} exec deployment/{{ include "ueransim.fullname" . }}-ue -- ping -I uesimtun0 -c 4 8.8.8.8

@@ -1,0 +1,22 @@
+# Enable the optional UERANSIM subchart in a combined free5GC release.
+deployUeransim: true
+
+ueransim:
+  image:
+    repository: 10.160.101.91:32000/ueransim
+    tag: "3.3.0"
+    pullPolicy: IfNotPresent
+
+  nodeSelector:
+    kubernetes.io/hostname: church
+
+  network:
+    # This address must remain reserved for the gNB pod. It was verified unused
+    # on 2026-09-03; run the documented ARP check again before installation.
+    ipAddress: 10.160.101.231
+
+  ue:
+    # Create this Secret in the release namespace before installing the chart.
+    existingAuthSecret: ueransim-ue-auth
+    config:
+      supi: "imsi-208930000000003"

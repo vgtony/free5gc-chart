@@ -1,0 +1,78 @@
+{{- if ne (int .Values.gnb.replicaCount) 1 }}
+{{- fail "gnb.replicaCount must be 1 because the gNB uses one fixed Multus IP" }}
+{{- end }}
+{{- if and (not .Values.network.create) (not .Values.network.existingNad) }}
+{{- fail "set network.create=true or provide network.existingNad" }}
+{{- end }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ueransim.fullname" . }}-gnb
+  labels:
+    {{- include "ueransim.labels" . | nindent 4 }}
+    app.kubernetes.io/component: gnb
+spec:
+  replicas: 1
+  strategy:
+    # A rolling update would temporarily contend for the fixed Multus address.
+    type: Recreate
+  selector:
+    matchLabels:
+      {{- include "ueransim.selectorLabels" . | nindent 6 }}
+      app.kubernetes.io/component: gnb
+  template:
+    metadata:
+      labels:
+        {{- include "ueransim.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: gnb
+        project: {{ .Values.global.projectName }}
+      annotations:
+        {{- $attachment := dict "name" (include "ueransim.networkAttachmentName" .) "interface" .Values.network.interfaceName "ips" (list (printf "%s/%v" .Values.network.ipAddress .Values.global.n2network.cidr)) }}
+        {{- if .Values.network.macAddress }}
+        {{- $_ := set $attachment "mac" .Values.network.macAddress }}
+        {{- end }}
+        k8s.v1.cni.cncf.io/networks: {{ list $attachment | toJson | quote }}
+        checksum/config: {{ include (print $.Template.BasePath "/gnb-configmap.yaml") . | sha256sum }}
+        {{- with .Values.gnb.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      automountServiceAccountToken: false
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      securityContext:
+        {{- toYaml .Values.gnb.podSecurityContext | nindent 8 }}
+      containers:
+        - name: gnb
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          command: ["/ueransim/build/nr-gnb"]
+          args: ["-c", "/ueransim/config/gnb-config.yaml"]
+          ports:
+            - name: radio
+              containerPort: {{ .Values.gnb.service.port }}
+              protocol: UDP
+            - name: gtpu
+              containerPort: 2152
+              protocol: UDP
+          securityContext:
+            {{- toYaml .Values.gnb.securityContext | nindent 12 }}
+          resources:
+            {{- toYaml .Values.gnb.resources | nindent 12 }}
+          volumeMounts:
+            - name: config
+              mountPath: /ueransim/config
+              readOnly: true
+      nodeSelector:
+        {{- toYaml .Values.nodeSelector | nindent 8 }}
+      affinity:
+        {{- toYaml .Values.affinity | nindent 8 }}
+      tolerations:
+        {{- toYaml .Values.tolerations | nindent 8 }}
+      terminationGracePeriodSeconds: 10
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "ueransim.fullname" . }}-gnb-config

@@ -1,0 +1,129 @@
+nameOverride: ""
+fullnameOverride: ""
+
+global:
+  projectName: free5gc
+  n2network:
+    type: macvlan
+    masterIf: eth0
+    cidr: 24
+  amf:
+    n2if:
+      ipAddress: 10.160.101.100
+    service:
+      ngap:
+        port: 38412
+
+image:
+  # Build images/ueransim/Dockerfile and push it to a registry visible to every
+  # eligible worker before deploying. The parent chart overrides this with the
+  # registry used by the current lab.
+  repository: ueransim
+  tag: "3.3.0"
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+
+# Both workloads are deliberately pinned to the RAN worker. The standard
+# kubernetes.io/hostname label already exists on kubeadm nodes.
+nodeSelector:
+  kubernetes.io/hostname: church
+tolerations: []
+affinity: {}
+
+network:
+  # The gNB uses one Multus interface for both N2 (SCTP/NGAP) and N3 (GTP-U).
+  # This matches this cluster, where both networks share the same L2 subnet.
+  create: true
+  existingNad: ""
+  name: ran
+  interfaceName: ran
+  ipAddress: 10.160.101.231
+  macAddress: ""
+
+gnb:
+  replicaCount: 1
+  service:
+    port: 4997
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      memory: 512Mi
+  podAnnotations: {}
+  podSecurityContext: {}
+  securityContext:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+  config:
+    mcc: "208"
+    mnc: "93"
+    nci: "0x000000010"
+    idLength: 32
+    tac: 1
+    slices:
+      - sst: 1
+        sd: "010203"
+    ignoreStreamIds: true
+    cellAccessType: nr
+
+ue:
+  replicaCount: 1
+  # Create this Secret separately with stringData keys "key" and "op". Keeping
+  # long-term subscriber credentials out of Helm values prevents accidental
+  # disclosure in Git and Helm release metadata.
+  existingAuthSecret: ueransim-ue-auth
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      memory: 512Mi
+  podAnnotations: {}
+  podSecurityContext: {}
+  securityContext:
+    runAsUser: 0
+    runAsGroup: 0
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL
+      add:
+        - NET_ADMIN
+        - MKNOD
+  config:
+    supi: "imsi-208930000000003"
+    mcc: "208"
+    mnc: "93"
+    protectionScheme: 0
+    homeNetworkPublicKey: "5a8d38864820197c3394b92613b20b91633cbd897119273bf8e4a6f4eec0a650"
+    homeNetworkPublicKeyId: 1
+    routingIndicator: "0000"
+    opType: OPC
+    amf: "8000"
+    imei: "356938035643803"
+    imeiSv: "4370816125816151"
+    tunNetmask: "255.255.255.0"
+    sessions:
+      - type: IPv4
+        apn: internet
+        slice:
+          sst: 1
+          sd: "010203"
+    configuredNssai:
+      - sst: 1
+        sd: "010203"
+    defaultNssai:
+      - sst: 1
+        sd: "000001"
+    integrity:
+      IA1: true
+      IA2: true
+      IA3: true
+    ciphering:
+      EA1: true
+      EA2: true
+      EA3: true
