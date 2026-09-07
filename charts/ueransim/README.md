@@ -30,10 +30,27 @@ SMF topology address needs to be changed.
 
   `100% packet loss (0 extra)` means no duplicate ARP reply was received.
 
-## Build and publish UERANSIM v3.3.0
+## Prepare an OSM namespace (recommended)
 
-The upstream UERANSIM repository does not publish a v3.3.0 runtime image. Build
-the included multi-stage image and push it to the lab registry:
+Run the repository helper after the OSM namespace exists. It checks the local
+registry, builds and publishes UERANSIM in a temporary Kubernetes Job only when
+the image is missing, and prompts invisibly for the UE key and OPc:
+
+```bash
+./prepare-ueransim-for-osm.sh --namespace <namespace>
+```
+
+The build Job deletes itself after a successful push. The image is shared by
+all namespaces, while the authentication Secret is created only in the target
+namespace. Run the command again for another OSM namespace; it will reuse the
+published image. Use `--help` to see registry overrides and non-interactive
+options.
+
+## Build and publish UERANSIM v3.3.0 manually
+
+The upstream UERANSIM repository does not publish a v3.3.0 runtime image. If the
+helper cannot be used, build the included multi-stage image and push it to the
+lab registry:
 
 ```bash
 docker build -t 10.160.101.91:32000/ueransim:3.3.0 images/ueransim

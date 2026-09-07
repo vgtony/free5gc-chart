@@ -143,13 +143,20 @@ UPFs.
 ## 6. Run UERANSIM on Church
 
 The `ueransim` subchart runs separate gNB and UE pods pinned to the `church`
-worker. It is enabled by default in chart version 1.2.1. Set
+worker. It is enabled by default in chart version 1.2.2. Set
 `deployUeransim=false` when a free5GC-only installation is required.
+
+After the OSM namespace exists, one command publishes the UERANSIM image when
+needed and securely creates the namespace-local UE authentication Secret:
+
+```bash
+./prepare-ueransim-for-osm.sh --namespace <namespace>
+```
 
 - To add only UERANSIM beside an existing core release, install
   `./charts/ueransim` with `charts/ueransim/church-values.yaml`.
 - For a fresh combined release, install this umbrella chart with
   `church-ueransim-values.yaml`.
 
-See [charts/ueransim/README.md](charts/ueransim/README.md) for image building,
-subscriber Secret creation, bare-process migration, and verification steps.
+See [charts/ueransim/README.md](charts/ueransim/README.md) for helper options,
+manual image building, bare-process migration, and verification steps.
