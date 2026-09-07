@@ -11,10 +11,10 @@ deployUdm: true
 deployUdr: true
 deployUpf: true
 deployWebui: true
-deployUeransim: false
+deployUeransim: true
 
-# Optional RAN workloads. Keeping deployUeransim=false preserves the existing
-# free5GC-only installation unless explicitly enabled.
+# The combined chart installs UERANSIM by default. Set deployUeransim=false for
+# a free5GC-only installation.
 ueransim:
   image:
     repository: 10.160.101.91:32000/ueransim

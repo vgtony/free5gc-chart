@@ -142,9 +142,9 @@ UPFs.
 
 ## 6. Run UERANSIM on Church
 
-The optional `ueransim` subchart runs separate gNB and UE pods pinned to the
-`church` worker. It is disabled by default, so existing free5GC-only installs
-are unchanged.
+The `ueransim` subchart runs separate gNB and UE pods pinned to the `church`
+worker. It is enabled by default in chart version 1.2.1. Set
+`deployUeransim=false` when a free5GC-only installation is required.
 
 - To add only UERANSIM beside an existing core release, install
   `./charts/ueransim` with `charts/ueransim/church-values.yaml`.
