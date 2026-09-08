@@ -24,10 +24,10 @@ image:
 
 imagePullSecrets: []
 
-# Empty by default: Kubernetes selects an eligible worker without relying on a
-# cluster-specific hostname. Set a selector only when RAN-capable workers are a
-# subset of the cluster.
-nodeSelector: {}
+# Map this abstract role to one or more real workers during cluster preparation.
+# The chart never needs to know their hostnames.
+nodeSelector:
+  telecom.example/ran: "true"
 tolerations: []
 affinity: {}
 

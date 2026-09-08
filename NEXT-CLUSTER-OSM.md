@@ -21,9 +21,17 @@ Other combinations may work, but validate them before OSM onboarding.
 The default chart is a three-UPF ULCL deployment. It does not refer to worker
 names. Preferred pod anti-affinity spreads the UPFs across distinct workers when
 capacity exists, but permits co-location on clusters with fewer than three
-schedulable workers.
+schedulable workers. The chart uses logical labels rather than node names:
 
-Every node eligible to run a UPF requires:
+```bash
+kubectl label node <RAN_AND_IUPF_NODE> \
+  telecom.example/ran=true telecom.example/upf-iupf=true
+kubectl label node <PSA1_NODE> telecom.example/upf-psa1=true
+kubectl label node <PSA2_NODE> telecom.example/upf-psa2=true
+```
+
+A smaller cluster may put multiple boolean role labels on the same node. Every
+node eligible to run a UPF requires:
 
 - `gtp5g` exactly v0.8.10, installed and loaded;
 - `gtp5g` in `/etc/modules-load.d/gtp5g.conf` for reboot persistence;

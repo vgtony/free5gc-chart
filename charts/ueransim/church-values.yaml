@@ -18,7 +18,7 @@ image:
   pullPolicy: IfNotPresent
 
 nodeSelector:
-  kubernetes.io/hostname: church
+  telecom.example/ran: "true"
 
 network:
   ipAddress: 10.160.101.231

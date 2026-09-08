@@ -8,7 +8,7 @@ ueransim:
     pullPolicy: IfNotPresent
 
   nodeSelector:
-    kubernetes.io/hostname: church
+    telecom.example/ran: "true"
 
   network:
     # This address must remain reserved for the gNB pod. It was verified unused

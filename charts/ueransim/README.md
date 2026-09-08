@@ -1,7 +1,7 @@
 # UERANSIM on Kubernetes
 
 This subchart runs UERANSIM v3.3.0 as two Kubernetes Deployments without naming
-a worker. Kubernetes selects an eligible node:
+a worker. Kubernetes selects a node labeled `telecom.example/ran=true`:
 
 - `gnb`: attaches to the configured physical network through Multus and uses
   one fixed address for both N2/NGAP and N3/GTP-U.
@@ -19,8 +19,9 @@ needs to be changed.
   and `tuning` CNI binaries.
 - The configured physical interface exists on every eligible gNB worker.
   Override `global.n2network.masterIf` when it is not `eth0`.
-- If only some nodes are RAN-capable, select them with a stable role label such
-  as `telecom.example/ran: "true"`; do not use their hostnames.
+- Label at least one prepared RAN node with
+  `kubectl label node <NODE> telecom.example/ran=true`. Multiple matching nodes
+  are allowed; their hostnames never enter the chart.
 - The free5GC subscriber matches `ue.config.supi`, slice `1/010203`, and DNN
   `internet`.
 - `10.160.101.231` is reserved and unused. Check again from a node on the same

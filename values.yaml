@@ -23,9 +23,9 @@ ueransim:
   network:
     # Verified unused on 2026-09-03. Reserve this address before deployment.
     ipAddress: 10.160.101.231
-  # Leave empty to let Kubernetes select any eligible worker. Override only
-  # when a cluster has a dedicated RAN node or only some workers have Multus.
-  nodeSelector: {}
+  # Map this abstract role to a real worker during cluster preconfiguration.
+  nodeSelector:
+    telecom.example/ran: "true"
 
 free5gc-amf:
   amf:
@@ -1889,7 +1889,8 @@ free5gc-upf:
     n9if:
       ipAddress: 10.160.101.206
     name: upf1
-    nodeSelector: {}
+    nodeSelector:
+      telecom.example/upf-psa1: "true"
     podAnnotations: {}
     podSecurityContext: {}
     readinessProbe:
@@ -1945,7 +1946,8 @@ free5gc-upf:
     n9if:
       ipAddress: 10.160.101.210
     name: upf2
-    nodeSelector: {}
+    nodeSelector:
+      telecom.example/upf-psa2: "true"
     podAnnotations: {}
     podSecurityContext: {}
     readinessProbe:
@@ -2003,7 +2005,8 @@ free5gc-upf:
     n9if:
       ipAddress: 10.160.101.204
     name: upfb
-    nodeSelector: {}
+    nodeSelector:
+      telecom.example/upf-iupf: "true"
     podAnnotations: {}
     podSecurityContext: {}
     readinessProbe:

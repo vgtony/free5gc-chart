@@ -143,8 +143,9 @@ UPFs.
 ## 6. Run UERANSIM
 
 The `ueransim` subchart runs separate gNB and UE pods. It is enabled by default
-in chart version 1.2.3. No worker hostname is configured: Kubernetes selects an
-eligible worker. Set `deployUeransim=false` for a free5GC-only installation.
+in chart version 1.2.4. No worker hostname is configured. The chart selects
+abstract RAN and UPF role labels that each cluster maps to its real workers
+before installation. Set `deployUeransim=false` for a core-only installation.
 
 After the OSM namespace exists, one command publishes the UERANSIM image when
 needed and securely creates the namespace-local UE authentication Secret:
@@ -155,9 +156,9 @@ needed and securely creates the namespace-local UE authentication Secret:
 
 - To add only UERANSIM beside an existing core release, install
   `./charts/ueransim` with cluster-specific network values.
-- For a fresh combined release, install this umbrella chart without a hostname
-  override. The `church-ueransim-values.yaml` file remains only as a lab-specific
-  example.
+- For a fresh combined release, label the RAN and UPF workers as documented,
+  then install this umbrella chart without a hostname override. The
+  `church-ueransim-values.yaml` file remains a lab network example.
 
 See [charts/ueransim/README.md](charts/ueransim/README.md) for helper options,
 manual image building, bare-process migration, and verification steps.
