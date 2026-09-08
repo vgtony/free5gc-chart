@@ -140,11 +140,11 @@ kubectl logs -n free5gc deployment/free5gc-free5gc-smf-smf | grep 'setup associa
 All workloads should be `1/1 Running`; SMF should associate with all configured
 UPFs.
 
-## 6. Run UERANSIM on Church
+## 6. Run UERANSIM
 
-The `ueransim` subchart runs separate gNB and UE pods pinned to the `church`
-worker. It is enabled by default in chart version 1.2.2. Set
-`deployUeransim=false` when a free5GC-only installation is required.
+The `ueransim` subchart runs separate gNB and UE pods. It is enabled by default
+in chart version 1.2.3. No worker hostname is configured: Kubernetes selects an
+eligible worker. Set `deployUeransim=false` for a free5GC-only installation.
 
 After the OSM namespace exists, one command publishes the UERANSIM image when
 needed and securely creates the namespace-local UE authentication Secret:
@@ -154,9 +154,10 @@ needed and securely creates the namespace-local UE authentication Secret:
 ```
 
 - To add only UERANSIM beside an existing core release, install
-  `./charts/ueransim` with `charts/ueransim/church-values.yaml`.
-- For a fresh combined release, install this umbrella chart with
-  `church-ueransim-values.yaml`.
+  `./charts/ueransim` with cluster-specific network values.
+- For a fresh combined release, install this umbrella chart without a hostname
+  override. The `church-ueransim-values.yaml` file remains only as a lab-specific
+  example.
 
 See [charts/ueransim/README.md](charts/ueransim/README.md) for helper options,
 manual image building, bare-process migration, and verification steps.

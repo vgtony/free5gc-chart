@@ -18,9 +18,10 @@ Other combinations may work, but validate them before OSM onboarding.
 
 ## 1. Worker topology and kernel preparation
 
-The default chart is a three-UPF ULCL deployment. Provide at least three Ready,
-schedulable workers with distinct `kubernetes.io/hostname` values. Required pod
-anti-affinity schedules one UPF per worker.
+The default chart is a three-UPF ULCL deployment. It does not refer to worker
+names. Preferred pod anti-affinity spreads the UPFs across distinct workers when
+capacity exists, but permits co-location on clusters with fewer than three
+schedulable workers.
 
 Every node eligible to run a UPF requires:
 

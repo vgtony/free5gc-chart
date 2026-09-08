@@ -13,7 +13,7 @@
 apiVersion: v2
 name: free5gc
 description: A Helm chart to deploy free5GC with UERANSIM gNB and UE workloads
-version: 1.2.2
+version: 1.2.3
 appVersion: latest
 dependencies:
 - name: mongodb

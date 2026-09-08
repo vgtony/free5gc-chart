@@ -1,5 +1,9 @@
-UERANSIM is pinned to node(s) matching:
+{{- if .Values.nodeSelector }}
+UERANSIM is restricted to node(s) matching:
 {{ toYaml .Values.nodeSelector | indent 2 }}
+{{- else }}
+UERANSIM has no hostname-specific node selector; Kubernetes selects the worker.
+{{- end }}
 
 Check the workloads:
   kubectl -n {{ .Release.Namespace }} get pods -l app.kubernetes.io/instance={{ .Release.Name }},app.kubernetes.io/name={{ include "ueransim.name" . }} -o wide

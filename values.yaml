@@ -23,8 +23,9 @@ ueransim:
   network:
     # Verified unused on 2026-09-03. Reserve this address before deployment.
     ipAddress: 10.160.101.231
-  nodeSelector:
-    kubernetes.io/hostname: church
+  # Leave empty to let Kubernetes select any eligible worker. Override only
+  # when a cluster has a dedicated RAN node or only some workers have Multus.
+  nodeSelector: {}
 
 free5gc-amf:
   amf:
@@ -1845,14 +1846,16 @@ free5gc-upf:
   upf1:
     affinity: &ulclUpfAffinity
       podAntiAffinity:
-        requiredDuringSchedulingIgnoredDuringExecution:
-          - labelSelector:
-              matchExpressions:
-                - key: app.kubernetes.io/name
-                  operator: In
-                  values:
-                    - free5gc-upf
-            topologyKey: kubernetes.io/hostname
+        preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                  - key: app.kubernetes.io/name
+                    operator: In
+                    values:
+                      - free5gc-upf
+              topologyKey: kubernetes.io/hostname
     autoscaling:
       enabled: false
       maxReplicas: 100
