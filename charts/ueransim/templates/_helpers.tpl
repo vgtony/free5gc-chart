@@ -37,3 +37,14 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- printf "%s-%s" .Values.network.name (include "ueransim.fullname" .) | trunc 63 | trimSuffix "-" -}}
 {{- end -}}
 {{- end -}}
+
+{{/* Preserve explicit names; otherwise isolate managed credentials per release. */}}
+{{- define "ueransim.authSecretName" -}}
+{{- if .Values.ue.existingAuthSecret -}}
+{{- .Values.ue.existingAuthSecret -}}
+{{- else if .Values.ue.auth.create -}}
+{{- printf "%s-ue-auth" (include "ueransim.fullname" . | trunc 55 | trimSuffix "-") -}}
+{{- else -}}
+{{- fail "ue.existingAuthSecret is required when ue.auth.create=false; create that Secret in the release namespace with keys key and op" -}}
+{{- end -}}
+{{- end -}}

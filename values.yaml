@@ -27,11 +27,12 @@ ueransim:
   nodeSelector:
     telecom.example/ran: "true"
   ue:
-    existingAuthSecret: ueransim-ue-auth
+    # Empty uses a release-specific Secret name when auth.create=true.
+    existingAuthSecret: ""
     auth:
-      # Enable this through protected OSM parameters to let Helm create the
-      # Secret. Values are intentionally empty in the public chart.
-      create: false
+      # Helm creates the Secret; supply matching subscriber credentials through
+      # protected installation values. Missing credentials fail rendering.
+      create: true
       key: ""
       op: ""
 

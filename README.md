@@ -143,15 +143,17 @@ UPFs.
 ## 6. Run UERANSIM
 
 The `ueransim` subchart runs separate gNB and UE pods. It is enabled by default
-in chart version 1.2.5. No worker hostname is configured. The chart selects
+in chart version 1.2.6. No worker hostname is configured. The chart selects
 abstract RAN and UPF role labels that each cluster maps to its real workers
 before installation. Set `deployUeransim=false` for a core-only installation.
 
-The public chart does not contain subscriber credentials. OSM can create the
-namespace-local Secret in the Helm release by supplying
-`ueransim.ue.auth.create=true`, `ueransim.ue.auth.key`, and
-`ueransim.ue.auth.op` as protected instantiation values. External-Secret mode
-remains available through `prepare-ueransim-for-osm.sh`.
+The public chart does not contain subscriber credentials. Helm now creates a
+release-specific authentication Secret by default. Supply `ueransim.ue.auth.key`
+and `ueransim.ue.auth.op` as protected installation values matching the free5GC
+subscriber. Missing or invalid credentials stop rendering before pods are created.
+For an external Secret, explicitly set `ueransim.ue.auth.create=false` and
+`ueransim.ue.existingAuthSecret`. See [portable installation](PORTABLE-INSTALL.md)
+for the remaining registry, networking, and subscriber requirements.
 
 - To add only UERANSIM beside an existing core release, install
   `./charts/ueransim` with cluster-specific network values.

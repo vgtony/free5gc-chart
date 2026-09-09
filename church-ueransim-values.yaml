@@ -18,5 +18,7 @@ ueransim:
   ue:
     # Create this Secret in the release namespace before installing the chart.
     existingAuthSecret: ueransim-ue-auth
+    auth:
+      create: false
     config:
       supi: "imsi-208930000000003"

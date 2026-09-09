@@ -5,9 +5,9 @@ UERANSIM is restricted to node(s) matching:
 UERANSIM has no hostname-specific node selector; Kubernetes selects the worker.
 {{- end }}
 {{- if .Values.ue.auth.create }}
-Helm manages UE authentication Secret {{ .Values.ue.existingAuthSecret }}.
+Helm manages UE authentication Secret {{ include "ueransim.authSecretName" . }}.
 {{- else }}
-Ensure external UE authentication Secret {{ .Values.ue.existingAuthSecret }} exists.
+Ensure external UE authentication Secret {{ include "ueransim.authSecretName" . }} exists.
 {{- end }}
 
 Check the workloads:

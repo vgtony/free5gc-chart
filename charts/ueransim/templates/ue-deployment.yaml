@@ -61,12 +61,12 @@ spec:
             - name: UE_KEY
               valueFrom:
                 secretKeyRef:
-                  name: {{ required "ue.existingAuthSecret is required" .Values.ue.existingAuthSecret }}
+                  name: {{ include "ueransim.authSecretName" . | quote }}
                   key: key
             - name: UE_OP
               valueFrom:
                 secretKeyRef:
-                  name: {{ required "ue.existingAuthSecret is required" .Values.ue.existingAuthSecret }}
+                  name: {{ include "ueransim.authSecretName" . | quote }}
                   key: op
           securityContext:
             {{- toYaml .Values.ue.securityContext | nindent 12 }}

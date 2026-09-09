@@ -72,11 +72,12 @@ gnb:
 
 ue:
   replicaCount: 1
-  # By default, reference an externally managed Secret with keys "key" and "op".
-  # OSM may instead set auth.create=true and supply both values at instantiation.
-  existingAuthSecret: ueransim-ue-auth
+  # Helm creates a release-specific Secret by default. Supply the credentials
+  # of the subscriber provisioned in free5GC at installation time.
+  # For an external Secret, set auth.create=false and existingAuthSecret.
+  existingAuthSecret: ""
   auth:
-    create: false
+    create: true
     key: ""
     op: ""
   resources:

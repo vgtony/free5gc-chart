@@ -33,8 +33,10 @@ needs to be changed.
 
   `100% packet loss (0 extra)` means no duplicate ARP reply was received.
 
-## Prepare an OSM namespace (recommended)
+## Prepare an OSM namespace (external Secret mode)
 
+Set `ue.auth.create=false` and `ue.existingAuthSecret=ueransim-ue-auth`
+(prefix both with `ueransim.` in the umbrella chart).
 Run the repository helper after the OSM namespace exists. It checks the local
 registry, builds and publishes UERANSIM in a temporary Kubernetes Job only when
 the image is missing, and prompts invisibly for the UE key and OPc:
@@ -76,12 +78,17 @@ ueransim:
       op: "<32-hex-op-or-opc>"
 ```
 
-Helm then creates `ueransim-ue-auth` in the release namespace. Helm release
-data contains these values, so production deployments should prefer an external
-secret manager. To keep the Secret outside Helm, leave `auth.create=false`
-(the default), set `existingAuthSecret` if using another name, and create it
-with the preparation helper documented above. Changing a Helm-managed key or
-OP/OPc automatically rolls the UE Deployment.
+Helm creates `<ueransim-fullname>-ue-auth` in the release namespace by default.
+An explicit `existingAuthSecret` overrides the generated name for compatibility.
+Missing or invalid keys fail rendering; `ue.config.opType` must be `OP` or `OPC`.
+Helm release data contains supplied credentials. To use an external secret
+manager, explicitly set `auth.create=false`, set `existingAuthSecret`, and
+provision that Secret with keys `key` and `op` in the target namespace. Changing
+a Helm-managed key or OP/OPc automatically rolls the UE Deployment.
+
+The chart does not provision the subscriber in MongoDB: matching credentials,
+SUPI, slice and DNN must also exist in free5GC. See the repository
+[portable installation guide](../../PORTABLE-INSTALL.md).
 
 ## Install beside the existing free5GC release
 

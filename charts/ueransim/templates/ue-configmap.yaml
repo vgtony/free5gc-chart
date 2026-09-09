@@ -1,3 +1,6 @@
+{{- if not (has .Values.ue.config.opType (list "OP" "OPC")) }}
+{{- fail "ue.config.opType must be OP or OPC and match the supplied subscriber credential" }}
+{{- end }}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -15,7 +18,7 @@ data:
     homeNetworkPublicKeyId: {{ .Values.ue.config.homeNetworkPublicKeyId }}
     routingIndicator: {{ .Values.ue.config.routingIndicator | quote }}
 
-    # Replaced in memory from ue.existingAuthSecret by the container wrapper.
+    # Replaced in memory from the selected authentication Secret by the container wrapper.
     key: '__UE_KEY__'
     op: '__UE_OP__'
     opType: {{ .Values.ue.config.opType | quote }}

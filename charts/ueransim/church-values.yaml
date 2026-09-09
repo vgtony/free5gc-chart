@@ -25,5 +25,7 @@ network:
 
 ue:
   existingAuthSecret: ueransim-ue-auth
+  auth:
+    create: false
   config:
     supi: "imsi-208930000000003"
