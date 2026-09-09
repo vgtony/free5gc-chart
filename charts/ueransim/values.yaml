@@ -72,10 +72,13 @@ gnb:
 
 ue:
   replicaCount: 1
-  # Create this Secret separately with stringData keys "key" and "op". Keeping
-  # long-term subscriber credentials out of Helm values prevents accidental
-  # disclosure in Git and Helm release metadata.
+  # By default, reference an externally managed Secret with keys "key" and "op".
+  # OSM may instead set auth.create=true and supply both values at instantiation.
   existingAuthSecret: ueransim-ue-auth
+  auth:
+    create: false
+    key: ""
+    op: ""
   resources:
     requests:
       cpu: 100m

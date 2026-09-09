@@ -26,6 +26,14 @@ ueransim:
   # Map this abstract role to a real worker during cluster preconfiguration.
   nodeSelector:
     telecom.example/ran: "true"
+  ue:
+    existingAuthSecret: ueransim-ue-auth
+    auth:
+      # Enable this through protected OSM parameters to let Helm create the
+      # Secret. Values are intentionally empty in the public chart.
+      create: false
+      key: ""
+      op: ""
 
 free5gc-amf:
   amf:

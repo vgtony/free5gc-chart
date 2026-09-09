@@ -25,6 +25,7 @@ spec:
         project: {{ .Values.global.projectName }}
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/ue-configmap.yaml") . | sha256sum }}
+        checksum/auth: {{ include (print $.Template.BasePath "/ue-auth-secret.yaml") . | sha256sum }}
         {{- with .Values.ue.podAnnotations }}
         {{- toYaml . | nindent 8 }}
         {{- end }}

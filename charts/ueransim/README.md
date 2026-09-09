@@ -62,23 +62,26 @@ docker push 10.160.101.91:32000/ueransim:3.3.0
 
 Override `image.repository` if another registry is used.
 
-## Create the UE authentication Secret
+## Provide UE authentication
 
-The permanent subscriber key and OP/OPc are intentionally not stored in chart
-values. Create the Secret in the target namespace using the same values that
-were provisioned in free5GC:
+The public chart contains no subscriber credentials. For an OSM-managed Secret,
+supply protected instantiation values that match the free5GC subscriber:
 
-```bash
-read -rsp 'UE permanent key: ' UE_KEY; echo
-read -rsp 'UE OP or OPc: ' UE_OP; echo
-kubectl -n <namespace> create secret generic ueransim-ue-auth \
-  --from-literal=key="$UE_KEY" \
-  --from-literal=op="$UE_OP"
-unset UE_KEY UE_OP
+```yaml
+ueransim:
+  ue:
+    auth:
+      create: true
+      key: "<32-hex-permanent-key>"
+      op: "<32-hex-op-or-opc>"
 ```
 
-If the Secret is rotated, restart the UE Deployment so its environment is
-reloaded.
+Helm then creates `ueransim-ue-auth` in the release namespace. Helm release
+data contains these values, so production deployments should prefer an external
+secret manager. To keep the Secret outside Helm, leave `auth.create=false`
+(the default), set `existingAuthSecret` if using another name, and create it
+with the preparation helper documented above. Changing a Helm-managed key or
+OP/OPc automatically rolls the UE Deployment.
 
 ## Install beside the existing free5GC release
 
