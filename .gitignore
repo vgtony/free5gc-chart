@@ -1,0 +1,3 @@
+# Generated installation files may contain subscriber credentials.
+*.private.yaml
+__pycache__/

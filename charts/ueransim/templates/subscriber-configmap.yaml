@@ -1,0 +1,23 @@
+{{- if .Values.provisioning.enabled }}
+{{- if not (has .Values.provisioning.sequenceNumberFormat (list "string" "object")) }}
+{{- fail "provisioning.sequenceNumberFormat must be string or object" }}
+{{- end }}
+{{- if not (regexMatch "^[0-9A-Fa-f]{12}$" .Values.provisioning.initialSqn) }}
+{{- fail "provisioning.initialSqn must contain exactly 12 hexadecimal characters" }}
+{{- end }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "ueransim.fullname" . }}-subscriber
+  labels:
+    {{- include "ueransim.labels" . | nindent 4 }}
+data:
+  subscriber.json: |
+    {{- $config := deepCopy .Values.ue.config }}
+    {{- range $key := list "database" "waitSeconds" "initialSqn" "sequenceNumberFormat" "ueAmbr" "sessionAmbr" }}
+    {{- $_ := set $config $key (index $.Values.provisioning $key) }}
+    {{- end }}
+    {{- $config | toPrettyJson | nindent 4 }}
+  provision-subscriber.js: |
+    {{- .Files.Get "files/provision-subscriber.js" | nindent 4 }}
+{{- end }}

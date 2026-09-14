@@ -1,0 +1,31 @@
+# Reusable OSM template for NSD free5gc_ueransim_5.
+# Replace placeholders before use. Kubernetes namespace is assigned by OSM.
+# additionalParams contains Helm values, not Kubernetes manifests.
+additionalParamsForVnf:
+  - member-vnf-index: free5gc
+    additionalParamsForKdu:
+      - kdu_name: free5gc
+        additionalParams:
+          # Merge the destination cluster's complete Helm values here, including
+          # global N2/N3/N4/N6/N9 networking, core IPs and patched core images.
+          # The create-instantiation.py helper performs this wrapping for you.
+          ueransim:
+            image:
+              repository: "<reachable-registry>/<project>/ueransim"
+              tag: "3.3.0"
+              pullPolicy: IfNotPresent
+            imagePullSecrets: []
+            # Label a prepared worker on each cluster; no hostname is hard-coded.
+            nodeSelector:
+              telecom.example/ran: "true"
+            network:
+              ipAddress: "<reserved-gNB-IP-for-this-cluster>"
+            ue:
+              existingAuthSecret: ""
+              auth:
+                create: true
+                key: "<32-hex-subscriber-key>"
+                op: "<32-hex-subscriber-OP-or-OPc>"
+              config:
+                supi: "imsi-<subscriber-IMSI>"
+                opType: OPC

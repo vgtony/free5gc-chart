@@ -1,10 +1,10 @@
 # Installing on a prepared Kubernetes cluster
 
-Version 1.2.6 fixes the implicit dependency on a manually created UE Secret.
+Version 1.2.7 creates the UE Secret and provisions its subscriber automatically.
 Helm creates the Secret in its release namespace from supplied subscriber
 credentials. Without valid credentials, rendering fails with a clear error.
-This prevents the missing-Secret failure; it does not automatically provision a
-subscriber or make an arbitrary cluster compatible with free5GC.
+The UE init container waits for MongoDB and writes the subscriber records before
+starting nr-ue. Cluster networking and runtime prerequisites still apply.
 
 ## Installation inputs
 
@@ -23,11 +23,11 @@ ueransim:
       opType: OPC # Use OP when supplying OP instead of OPc.
 ```
 
-These are placeholders, not working credentials. Supply the same subscriber
-identity and authentication material that you provision in free5GC; also align
-MCC/MNC, slice, DNN and authentication parameters. The bundled dbpython pod only
-sleeps: it does not automatically insert subscribers. Creating the UE Secret
-alone cannot make a new, empty core database authenticate a UE.
+These are placeholders, not working credentials. Supply the identity and
+authentication material once. The combined chart uses them for both the UE and
+Free5GC database. Align MCC/MNC, slice and DNN with the AMF/SMF/NSSF network
+configuration; provisioning does not rewrite core network configuration.
+See [subscriber provisioning](charts/ueransim/SUBSCRIBER-PROVISIONING.md).
 
 ```bash
 helm upgrade --install free5gc-ueransim . \
@@ -37,7 +37,7 @@ helm upgrade --install free5gc-ueransim . \
 ```
 
 For OSM, supply the same values as protected KDU installation parameters and
-onboard the new `free5gc-1.2.6.tgz` artifact. A manual Secret-creation step is no
+onboard the new `free5gc-1.2.7.tgz` artifact. A manual Secret-creation step is no
 longer required in managed mode, including in a newly generated namespace.
 Helm stores the supplied values in its release data.
 
@@ -48,7 +48,7 @@ name while leaving `create=true` means Helm manages that named Secret, preservin
 the earlier chart behavior. The included church examples explicitly use external
 mode. To switch those examples to managed mode, override both fields as above.
 Existing installations using an external Secret must explicitly retain external
-mode when upgrading to 1.2.6. Credentials are never generated or rotated silently.
+mode when upgrading to 1.2.7. Credentials are never generated or rotated silently.
 
 ## Cluster-specific requirements
 

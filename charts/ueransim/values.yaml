@@ -73,7 +73,7 @@ gnb:
 ue:
   replicaCount: 1
   # Helm creates a release-specific Secret by default. Supply the credentials
-  # of the subscriber provisioned in free5GC at installation time.
+  # to use for this subscriber at installation time.
   # For an external Secret, set auth.create=false and existingAuthSecret.
   existingAuthSecret: ""
   auth:
@@ -122,7 +122,7 @@ ue:
         sd: "010203"
     defaultNssai:
       - sst: 1
-        sd: "000001"
+        sd: "010203"
     integrity:
       IA1: true
       IA2: true
@@ -131,3 +131,33 @@ ue:
       EA1: true
       EA2: true
       EA3: true
+
+# Writes only the configured UE's free5GC v3.3.0 subscription records before nr-ue starts.
+# Standalone installations opt in; the parent chart enables it by default.
+provisioning:
+  enabled: false
+  image:
+    repository: docker.io/library/mongo
+    tag: "6.0.26"
+    pullPolicy: IfNotPresent
+  mongoUri: "mongodb://mongodb:27017/?serverSelectionTimeoutMS=5000&connectTimeoutMS=5000"
+  # For an authenticated database, use a Secret containing the full connection URI.
+  existingMongoSecret: ""
+  mongoSecretKey: uri
+  database: free5gc
+  waitSeconds: 300
+  initialSqn: "000000000000"
+  # v3.3.0 uses a string. Select object only for cores using the newer schema.
+  sequenceNumberFormat: string
+  ueAmbr:
+    uplink: "1 Gbps"
+    downlink: "2 Gbps"
+  sessionAmbr:
+    uplink: "1 Gbps"
+    downlink: "2 Gbps"
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      memory: 512Mi

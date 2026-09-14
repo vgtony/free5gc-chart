@@ -25,11 +25,56 @@ spec:
         project: {{ .Values.global.projectName }}
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/ue-configmap.yaml") . | sha256sum }}
+        {{- if .Values.provisioning.enabled }}
+        checksum/provisioning: {{ include (print $.Template.BasePath "/subscriber-configmap.yaml") . | sha256sum }}
+        {{- end }}
         checksum/auth: {{ include (print $.Template.BasePath "/ue-auth-secret.yaml") . | sha256sum }}
         {{- with .Values.ue.podAnnotations }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
     spec:
+      {{- if .Values.provisioning.enabled }}
+      initContainers:
+        - name: provision-subscriber
+          image: "{{ .Values.provisioning.image.repository }}:{{ .Values.provisioning.image.tag }}"
+          imagePullPolicy: {{ .Values.provisioning.image.pullPolicy }}
+          command: ["mongosh", "--quiet", "--nodb", "/provision/provision-subscriber.js"]
+          env:
+            - name: UE_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "ueransim.authSecretName" . | quote }}
+                  key: key
+            - name: UE_OP
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "ueransim.authSecretName" . | quote }}
+                  key: op
+            - name: MONGO_URI
+              {{- if .Values.provisioning.existingMongoSecret }}
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.provisioning.existingMongoSecret | quote }}
+                  key: {{ .Values.provisioning.mongoSecretKey | quote }}
+              {{- else }}
+              value: {{ .Values.provisioning.mongoUri | quote }}
+              {{- end }}
+            - name: HOME
+              value: /tmp
+          securityContext:
+            runAsUser: 999
+            runAsGroup: 999
+            runAsNonRoot: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: ["ALL"]
+          resources:
+            {{- toYaml .Values.provisioning.resources | nindent 12 }}
+          volumeMounts:
+            - name: subscriber-provisioning
+              mountPath: /provision
+              readOnly: true
+      {{- end }}
       automountServiceAccountToken: false
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
@@ -86,6 +131,11 @@ spec:
         {{- toYaml .Values.tolerations | nindent 8 }}
       terminationGracePeriodSeconds: 10
       volumes:
+        {{- if .Values.provisioning.enabled }}
+        - name: subscriber-provisioning
+          configMap:
+            name: {{ include "ueransim.fullname" . }}-subscriber
+        {{- end }}
         - name: config-template
           configMap:
             name: {{ include "ueransim.fullname" . }}-ue-config

@@ -86,8 +86,10 @@ manager, explicitly set `auth.create=false`, set `existingAuthSecret`, and
 provision that Secret with keys `key` and `op` in the target namespace. Changing
 a Helm-managed key or OP/OPc automatically rolls the UE Deployment.
 
-The chart does not provision the subscriber in MongoDB: matching credentials,
-SUPI, slice and DNN must also exist in free5GC. See the repository
+The parent chart enables `ueransim.provisioning.enabled=true` by default and
+creates the subscriber before the UE starts. Standalone installs opt in with
+`provisioning.enabled=true`; otherwise provision the matching subscriber yourself.
+See [subscriber provisioning](SUBSCRIBER-PROVISIONING.md) and the repository
 [portable installation guide](../../PORTABLE-INSTALL.md).
 
 ## Install beside the existing free5GC release

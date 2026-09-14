@@ -40,7 +40,7 @@ class AuthRendering(unittest.TestCase):
                                 release=release, namespace=namespace)
                 self.assertEqual(r.returncode, 0, r.stderr)
                 self.assertIn('kind: Secret', r.stdout)
-                self.assertEqual(r.stdout.count(f'name: "{release}-ueransim-ue-auth"'), 3)
+                self.assertEqual(r.stdout.count(f'name: "{release}-ueransim-ue-auth"'), 5 if umbrella else 3)
                 self.assertIn(f'namespace: "{namespace}"', r.stdout)
                 self.assertIn(f'key: "{KEY}"', r.stdout)
                 self.assertIn(f'op: "{OP}"', r.stdout)

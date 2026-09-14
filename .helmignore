@@ -6,3 +6,8 @@ dist/
 *.bak
 my-*.yaml
 
+# Keep deployment inputs and local tooling out of the chart archive.
+*.private.yaml
+osm/
+*.sh
+tests/
