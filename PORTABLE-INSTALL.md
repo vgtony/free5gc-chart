@@ -1,14 +1,18 @@
 # Installing on a prepared Kubernetes cluster
 
-Version 1.2.7 creates the UE Secret and provisions its subscriber automatically.
-Helm creates the Secret in its release namespace from supplied subscriber
-credentials. Without valid credentials, rendering fails with a clear error.
+Version 1.2.8 includes shared public lab credentials and creates the UE Secret
+and subscriber automatically, without authentication overrides. The default SUPI
+is `imsi-208930000000003`, K is `465B5CE8B199B49FAA5F0A2EE238A6BC`, and
+OPc is `E8ED289DEBA952E4283B54E88E6183CA` (`opType: OPC`).
+Helm creates the Secret in its release namespace. Explicitly empty or invalid
+credential overrides still fail rendering.
 The UE init container waits for MongoDB and writes the subscriber records before
 starting nr-ue. Cluster networking and runtime prerequisites still apply.
 
 ## Installation inputs
 
-Provide protected values to Helm or OSM (do not commit real credentials):
+The parent chart installs with its lab defaults. To use different credentials,
+provide these overrides to Helm or OSM (do not commit real credentials):
 
 ```yaml
 ueransim:
@@ -36,8 +40,9 @@ helm upgrade --install free5gc-ueransim . \
   --wait --timeout 10m
 ```
 
-For OSM, supply the same values as protected KDU installation parameters and
-onboard the new `free5gc-1.2.7.tgz` artifact. A manual Secret-creation step is no
+For OSM, onboard `free5gc-1.2.8.tgz`; no authentication parameters are needed
+for the default lab subscriber. Remove any old empty credential overrides.
+Optional custom credentials can be supplied as KDU installation parameters. A manual Secret-creation step is no
 longer required in managed mode, including in a newly generated namespace.
 Helm stores the supplied values in its release data.
 
@@ -48,7 +53,12 @@ name while leaving `create=true` means Helm manages that named Secret, preservin
 the earlier chart behavior. The included church examples explicitly use external
 mode. To switch those examples to managed mode, override both fields as above.
 Existing installations using an external Secret must explicitly retain external
-mode when upgrading to 1.2.7. Credentials are never generated or rotated silently.
+mode when upgrading. Version 1.2.8 uses the documented public lab credentials
+unless explicitly overridden.
+
+Multiple lab UEs can reuse K and OPc, but each must have a unique SUPI. This
+chart requires one UE per release (`ue.replicaCount: 1`); use separate UERANSIM
+releases with unique SUPIs for additional UEs.
 
 ## Cluster-specific requirements
 

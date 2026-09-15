@@ -28,9 +28,17 @@ class AuthRendering(unittest.TestCase):
 
     def test_missing_credentials_fail_before_install(self):
         for umbrella in (False, True):
-            r = self.render(umbrella=umbrella)
+            r = self.render({"auth": {"key": "", "op": ""}}, umbrella=umbrella)
             self.assertNotEqual(r.returncode, 0)
             self.assertIn("ue.auth.key must contain exactly 32 hexadecimal characters", r.stderr)
+
+    def test_parent_defaults_render_with_shared_lab_credentials(self):
+        r = self.render(umbrella=True)
+        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertIn('key: "465B5CE8B199B49FAA5F0A2EE238A6BC"', r.stdout)
+        self.assertIn('op: "E8ED289DEBA952E4283B54E88E6183CA"', r.stdout)
+        self.assertIn('name: provision-subscriber', r.stdout)
+        self.assertEqual(r.stdout.count('name: "test-ueransim-ue-auth"'), 5)
 
     def test_managed_secret_matches_both_refs_in_new_namespaces(self):
         for umbrella in (False, True):

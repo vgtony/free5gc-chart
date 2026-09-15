@@ -32,11 +32,14 @@ ueransim:
     # Empty uses a release-specific Secret name when auth.create=true.
     existingAuthSecret: ""
     auth:
-      # Helm creates the Secret; supply matching subscriber credentials through
-      # protected installation values. Missing credentials fail rendering.
+      # Shared public test credentials for this proof-of-concept lab.
+      # Helm and subscriber provisioning use the same values. Override as needed.
       create: true
-      key: ""
-      op: ""
+      key: "465B5CE8B199B49FAA5F0A2EE238A6BC"
+      op: "E8ED289DEBA952E4283B54E88E6183CA"
+    config:
+      supi: "imsi-208930000000003"
+      opType: "OPC"
 
 free5gc-amf:
   amf:

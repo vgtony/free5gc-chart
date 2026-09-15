@@ -66,8 +66,10 @@ Override `image.repository` if another registry is used.
 
 ## Provide UE authentication
 
-The public chart contains no subscriber credentials. For an OSM-managed Secret,
-supply protected instantiation values that match the free5GC subscriber:
+The parent free5gc chart includes shared public lab credentials starting in
+1.2.8 and provisions the matching subscriber automatically. The standalone
+subchart still requires credentials. To override the parent defaults, supply
+instantiation values that match the free5GC subscriber:
 
 ```yaml
 ueransim:
