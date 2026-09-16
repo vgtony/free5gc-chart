@@ -1,0 +1,98 @@
+{{- if .Values.nrfCleanup.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "free5gc-amf.fullname" . }}-nrf-cleanup
+  labels:
+    {{- include "free5gc-amf.labels" . | nindent 4 }}
+data:
+  cleanup.py: |-
+    import os
+    import socket
+    import time
+    import urllib.error
+    import urllib.parse
+    import urllib.request
+
+    from pymongo import MongoClient
+
+
+    mongo_uri = os.environ["MONGODB_URI"]
+    database = os.environ.get("MONGODB_DATABASE", "free5gc")
+    nrf_url = os.environ["NRF_URL"].rstrip("/")
+    dns_retries = int(os.environ.get("DNS_RETRIES", "5"))
+    dns_retry_seconds = float(os.environ.get("DNS_RETRY_SECONDS", "1"))
+
+
+    def service_resolves(host):
+        for attempt in range(dns_retries):
+            try:
+                socket.getaddrinfo(host, None)
+                return True
+            except socket.gaierror:
+                if attempt + 1 < dns_retries:
+                    time.sleep(dns_retry_seconds)
+        return False
+
+
+    client = MongoClient(mongo_uri, serverSelectionTimeoutMS=5000)
+    client.admin.command("ping")
+    profiles = client[database]["NfProfile"].find(
+        {},
+        {
+            "_id": 0,
+            "nfInstanceId": 1,
+            "nfType": 1,
+            "nfServices.ipEndPoints.ipv4Address": 1,
+        },
+    )
+
+    removed = 0
+    kept = 0
+    for profile in profiles:
+        instance_id = profile.get("nfInstanceId")
+        hosts = {
+            endpoint.get("ipv4Address")
+            for service in profile.get("nfServices") or []
+            for endpoint in service.get("ipEndPoints") or []
+            if endpoint.get("ipv4Address")
+        }
+        if not instance_id or not hosts:
+            print(
+                "Keeping NRF profile without a complete service endpoint: "
+                f"{profile.get('nfType', 'UNKNOWN')} {instance_id}"
+            )
+            kept += 1
+            continue
+
+        live_hosts = sorted(host for host in hosts if service_resolves(host))
+        if live_hosts:
+            print(
+                f"Keeping live NRF profile {profile.get('nfType')} {instance_id}: "
+                f"{', '.join(live_hosts)}"
+            )
+            kept += 1
+            continue
+
+        endpoint = (
+            f"{nrf_url}/nnrf-nfm/v1/nf-instances/"
+            f"{urllib.parse.quote(instance_id, safe='')}"
+        )
+        request = urllib.request.Request(endpoint, method="DELETE")
+        try:
+            with urllib.request.urlopen(request, timeout=10) as response:
+                if response.status not in (200, 204):
+                    raise RuntimeError(
+                        f"NRF returned HTTP {response.status} for {instance_id}"
+                    )
+        except urllib.error.HTTPError as error:
+            if error.code != 404:
+                raise
+        print(
+            f"Deregistered stale NRF profile {profile.get('nfType')} {instance_id}: "
+            f"{', '.join(sorted(hosts))}"
+        )
+        removed += 1
+
+    print(f"NRF cleanup complete: removed={removed} kept={kept}")
+{{- end }}

@@ -57,6 +57,21 @@ initcontainers:
     image: busybox
     tag: "1.32.0"
 
+# A retained MongoDB PVC can contain NRF profiles from a previous Helm release.
+# Before AMF starts, remove only profiles whose advertised service names no
+# longer resolve. Deregistration is performed through the NRF API.
+nrfCleanup:
+  enabled: false
+  image:
+    name: towards5gs/free5gc-dbpython
+    tag: latest
+    pullPolicy: IfNotPresent
+  mongodbUri: mongodb://mongodb:27017
+  database: free5gc
+  nrfUrl: http://nrf-nnrf:8000
+  dnsRetries: 5
+  dnsRetrySeconds: 1
+
 isNgapNeeded: true
 
 amf:

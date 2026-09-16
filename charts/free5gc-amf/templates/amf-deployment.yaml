@@ -40,6 +40,9 @@ spec:
             }]'
         {{- end }}
         checksum/config: {{ include (print $.Template.BasePath "/amf-configmap.yaml") $ | sha256sum }}
+        {{- if $.Values.nrfCleanup.enabled }}
+        checksum/nrf-cleanup: {{ include (print $.Template.BasePath "/nrf-cleanup-configmap.yaml") $ | sha256sum }}
+        {{- end }}
       labels:
         {{- include "free5gc-amf.selectorLabels" $ | nindent 8 }}
         project: {{ $.Values.global.projectName }}
@@ -58,6 +61,28 @@ spec:
         - name: DEPENDENCIES
           value: {{ $.Values.global.sbi.scheme }}://{{ $.Values.global.nrf.service.name }}:{{ $.Values.global.nrf.service.port }}
         command: ['sh', '-c', 'set -x; for dependency in $DEPENDENCIES; do while [ $(curl --insecure --connect-timeout 1 -s -o /dev/null -w "%{http_code}" $dependency) -ne 200 ]; do echo waiting for dependencies; sleep 1; done; done;']
+      {{- if $.Values.nrfCleanup.enabled }}
+      - name: cleanup-stale-nrf
+        image: {{ $.Values.nrfCleanup.image.name }}:{{ $.Values.nrfCleanup.image.tag }}
+        imagePullPolicy: {{ $.Values.nrfCleanup.image.pullPolicy }}
+        command: ["python3", "/opt/nrf-cleanup/cleanup.py"]
+        env:
+        - name: MONGODB_URI
+          value: {{ $.Values.nrfCleanup.mongodbUri | quote }}
+        - name: MONGODB_DATABASE
+          value: {{ $.Values.nrfCleanup.database | quote }}
+        - name: NRF_URL
+          value: {{ $.Values.nrfCleanup.nrfUrl | quote }}
+        - name: DNS_RETRIES
+          value: {{ $.Values.nrfCleanup.dnsRetries | quote }}
+        - name: DNS_RETRY_SECONDS
+          value: {{ $.Values.nrfCleanup.dnsRetrySeconds | quote }}
+        volumeMounts:
+        - name: nrf-cleanup-script
+          mountPath: /opt/nrf-cleanup
+          readOnly: true
+      {{- end }}
+
 
       containers:
       - name: {{ .name }}
@@ -98,4 +123,9 @@ spec:
           sources:
           - configMap:
               name: {{ include "free5gc-amf.fullname" $ }}-configmap
+      {{- if $.Values.nrfCleanup.enabled }}
+      - name: nrf-cleanup-script
+        configMap:
+          name: {{ include "free5gc-amf.fullname" $ }}-nrf-cleanup
+      {{- end }}
 {{- end }}

@@ -49,6 +49,8 @@ ueransim:
       opType: "OPC"
 
 free5gc-amf:
+  nrfCleanup:
+    enabled: true
   amf:
     affinity: {}
     autoscaling:

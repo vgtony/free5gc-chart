@@ -48,5 +48,25 @@ class LabProfile(unittest.TestCase):
         self.assertEqual(auth['sequenceNumberFormat'], 'object')
         self.assertEqual(auth['initialSqn'], '000000000020')
 
+    def test_amf_cleans_only_unresolvable_stale_nrf_profiles(self):
+        cleanup = self.config('free5gc-amf-nrf-cleanup')['cleanup.py']
+        compile(cleanup, '<nrf-cleanup>', 'exec')
+        self.assertIn('service_resolves(host)', cleanup)
+        self.assertIn('method="DELETE"', cleanup)
+        self.assertIn('["NfProfile"].find(', cleanup)
+        self.assertNotIn('.delete_many(', cleanup)
+
+        amf = next(
+            d for d in self.docs
+            if d['kind'] == 'Deployment'
+            and d['metadata']['name'].endswith('free5gc-amf-amf')
+        )['spec']['template']['spec']
+        cleanup_init = next(
+            c for c in amf['initContainers']
+            if c['name'] == 'cleanup-stale-nrf'
+        )
+        self.assertEqual(cleanup_init['command'], ['python3', '/opt/nrf-cleanup/cleanup.py'])
+        self.assertEqual(cleanup_init['image'], 'towards5gs/free5gc-dbpython:latest')
+
 if __name__ == '__main__':
     unittest.main()

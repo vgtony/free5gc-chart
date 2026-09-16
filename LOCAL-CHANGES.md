@@ -1,3 +1,12 @@
+## 1.2.11 — stale NRF cleanup for retained MongoDB installs
+
+- Before AMF starts, inspect retained `NfProfile` records and resolve every
+  advertised service endpoint through cluster DNS.
+- Deregister a profile through the NRF API only when none of its advertised
+  endpoints resolves. Profiles without complete endpoint metadata are kept.
+- Enable the guarded cleanup in the parent chart so OSM reinstalls can reuse the
+  MongoDB PVC without AMF selecting an AUSF service from an old Helm release.
+
 ## 1.2.10 — self-contained OSM lab test package
 
 - Bake the verified patched-lab profile into parent defaults: modern authentication,
