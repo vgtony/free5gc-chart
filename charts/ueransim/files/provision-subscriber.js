@@ -4,6 +4,10 @@ const fs = require('fs');
 const crypto = require('crypto');
 const config = JSON.parse(fs.readFileSync(process.env.SUBSCRIBER_CONFIG || '/provision/subscriber.json', 'utf8'));
 function requireThat(ok, message) { if (!ok) throw new Error(message); }
+requireThat(['string', 'object'].includes(config.sequenceNumberFormat), 'Invalid sequenceNumberFormat');
+const authSchema = config.authenticationSchema || 'legacy';
+requireThat(['legacy', 'modern'].includes(authSchema), 'Invalid authenticationSchema');
+requireThat(authSchema !== 'modern' || config.sequenceNumberFormat === 'object', 'Modern authentication requires object sequenceNumberFormat');
 const key = process.env.UE_KEY || '';
 const op = process.env.UE_OP || '';
 requireThat(/^[a-fA-F0-9]{32}$/.test(key) && /^[a-fA-F0-9]{32}$/.test(op), 'Invalid UE credentials');
@@ -58,6 +62,12 @@ const authFields = {
     permanentKey: {permanentKeyValue: key.toLowerCase(), encryptionKey: 0, encryptionAlgorithm: 0},
     opc: {opcValue: opc, encryptionKey: 0, encryptionAlgorithm: 0},
 };
+if (authSchema === 'modern') {
+    authFields.encPermanentKey = key.toLowerCase();
+    authFields.encOpcKey = opc;
+    delete authFields.permanentKey;
+    delete authFields.opc;
+}
 const records = [{collection: 'subscriptionData.provisionedData.amData', filter: plmnFilter, fields: {
     nssai: {defaultSingleNssais: defaults, singleNssais: [...slices.entries()].filter(([id]) => !defaultIds.has(id)).map(([, e]) => e.slice)},
     subscribedUeAmbr: config.ueAmbr,
@@ -90,17 +100,31 @@ while (!database) {
 }
 const authCollection = database.getCollection('subscriptionData.authenticationData.authenticationSubscription');
 const existing = authCollection.findOne(ueFilter);
+// Validate every credential representation present; never silently rotate keys.
 if (existing) {
-    // Do not silently rotate another installation's subscriber credentials.
-    const sameKey = String((existing.permanentKey || {}).permanentKeyValue || '').toLowerCase() === key.toLowerCase();
-    const sameOpc = String((existing.opc || {}).opcValue || '').toLowerCase() === opc;
-    requireThat(sameKey && sameOpc && existing.authenticationManagementField === config.amf && existing.authenticationMethod === '5G_AKA',
-        'Existing subscriber authentication differs; supply matching credentials or explicitly migrate the subscriber');
+    const keys = [existing.encPermanentKey, (existing.permanentKey || {}).permanentKeyValue].filter(v => v !== undefined);
+    const opcs = [existing.encOpcKey, (existing.opc || {}).opcValue].filter(v => v !== undefined);
+    requireThat(keys.length && opcs.length && keys.every(v => String(v).toLowerCase() === key.toLowerCase()) &&
+        opcs.every(v => String(v).toLowerCase() === opc) &&
+        String(existing.authenticationManagementField).toLowerCase() === config.amf.toLowerCase() && existing.authenticationMethod === '5G_AKA',
+        'Existing subscriber authentication differs; align credentials explicitly before provisioning');
+    const currentSqn = typeof existing.sequenceNumber === 'string' ? existing.sequenceNumber : (existing.sequenceNumber || {}).sqn;
+    requireThat(/^[a-fA-F0-9]{12}$/.test(currentSqn || ''), 'Existing subscriber has an invalid SQN');
+    const correctFields = authSchema === 'modern' ? existing.encPermanentKey && existing.encOpcKey : existing.permanentKey && existing.opc;
+    const correctSequence = config.sequenceNumberFormat === 'object' ? existing.sequenceNumber && typeof existing.sequenceNumber === 'object' : typeof existing.sequenceNumber === 'string';
+    if (!correctFields || !correctSequence) {
+        requireThat(config.migrateAuthentication === true, 'Existing subscriber schema differs; enable migrateAuthentication to preserve SQN while converting');
+        const sqn = currentSqn;
+        const sequenceNumber = config.sequenceNumberFormat === 'object'
+            ? (typeof existing.sequenceNumber === 'object' ? existing.sequenceNumber : {sqn, sqnScheme: 'NON_TIME_BASED'}) : sqn;
+        // Compare the entire snapshot so concurrent authentication or credential edits cannot be overwritten.
+        const result = authCollection.updateOne(existing, {$set: {...authFields, sequenceNumber}});
+        requireThat(result.matchedCount === 1, 'Subscriber changed during migration; retry provisioning');
+    }
 }
-// Upsert only this subscriber. $setOnInsert preserves an SQN advanced by the core.
+// New records only: retries and upgrades never reset an SQN advanced by the core.
 const initialSequence = config.sequenceNumberFormat === 'object'
-    ? {sqn: config.initialSqn, sqnScheme: 'NON_TIME_BASED', ind: 0} : config.initialSqn;
-requireThat(['string', 'object'].includes(config.sequenceNumberFormat), 'Invalid sequenceNumberFormat');
+    ? {sqn: config.initialSqn, sqnScheme: 'NON_TIME_BASED'} : config.initialSqn;
 authCollection.updateOne(ueFilter, {$setOnInsert: {...ueFilter, ...authFields, sequenceNumber: initialSequence}}, {upsert: true});
 for (const record of records) {
     database.getCollection(record.collection).updateOne(record.filter,

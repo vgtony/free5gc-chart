@@ -71,7 +71,7 @@ class MongoIntegration(unittest.TestCase):
         self.js('db.dropDatabase()')
         cm = next(d for d in render() if d['kind'] == 'ConfigMap' and d['metadata']['name'].endswith('-subscriber'))
         self.config = json.loads(cm['data']['subscriber.json'])
-        self.config.update(database='provision_test', waitSeconds=2)
+        self.config.update(database='provision_test', waitSeconds=2, authenticationSchema='legacy', sequenceNumberFormat='string', initialSqn='000000000000', migrateAuthentication=False)
         self.exec(['sh', '-c', 'cat > /tmp/provision-subscriber.js'], cm['data']['provision-subscriber.js'])
 
     def provision(self, key=KEY, op=OPC, check=True, uri='mongodb://127.0.0.1:27017/?serverSelectionTimeoutMS=500'):
@@ -110,6 +110,35 @@ check(db.getCollection('subscriptionData.provisionedData.smData').countDocuments
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('Existing subscriber authentication differs', result.stderr + result.stdout)
         self.js("check(db.getCollection('subscriptionData.authenticationData.authenticationSubscription').findOne({ueId:'imsi-208930000000003'}).permanentKey.permanentKeyValue,'" + KEY + "')")
+
+    def test_modern_schema_creates_credentials_and_preserves_advanced_sqn(self):
+        self.config.update(authenticationSchema='modern', sequenceNumberFormat='object', initialSqn='000000000020')
+        self.provision()
+        self.js("const c=db.getCollection('subscriptionData.authenticationData.authenticationSubscription'); const a=c.findOne({ueId:'imsi-208930000000003'}); check(a.encPermanentKey,'" + KEY + "'); check(a.encOpcKey,'" + OPC + "'); check(a.permanentKey,undefined); check(a.sequenceNumber.sqn,'000000000020'); c.updateOne({_id:a._id},{$set:{'sequenceNumber.sqn':'000000000123'}});")
+        self.provision()
+        self.js("check(db.getCollection('subscriptionData.authenticationData.authenticationSubscription').findOne({ueId:'imsi-208930000000003'}).sequenceNumber.sqn,'000000000123')")
+
+    def test_migration_is_explicit_and_preserves_sqn(self):
+        self.provision()
+        self.js("db.getCollection('subscriptionData.authenticationData.authenticationSubscription').updateOne({ueId:'imsi-208930000000003'},{$set:{sequenceNumber:'000000000123'}})")
+        self.config.update(authenticationSchema='modern', sequenceNumberFormat='object')
+        result = self.provision(check=False)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('enable migrateAuthentication', result.stdout + result.stderr)
+        self.config['migrateAuthentication'] = True
+        self.provision()
+        self.provision()
+        self.js("const a=db.getCollection('subscriptionData.authenticationData.authenticationSubscription').findOne({ueId:'imsi-208930000000003'}); check(a.encPermanentKey,'" + KEY + "'); check(a.encOpcKey,'" + OPC + "'); check(a.sequenceNumber.sqn,'000000000123')")
+        result = self.provision(key='00'*16, check=False)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('authentication differs', result.stdout + result.stderr)
+
+    def test_migration_rejects_bad_sqn_without_writing_keys(self):
+        self.provision()
+        self.js("db.getCollection('subscriptionData.authenticationData.authenticationSubscription').updateOne({ueId:'imsi-208930000000003'},{$set:{sequenceNumber:'invalid'}})")
+        self.config.update(authenticationSchema='modern', sequenceNumberFormat='object', migrateAuthentication=True)
+        self.assertNotEqual(self.provision(check=False).returncode, 0)
+        self.js("const a=db.getCollection('subscriptionData.authenticationData.authenticationSubscription').findOne({ueId:'imsi-208930000000003'}); check(a.encPermanentKey,undefined); check(a.sequenceNumber,'invalid')")
 
     def test_unavailable_database_fails_with_bounded_retry(self):
         result = self.provision(check=False, uri='mongodb://127.0.0.1:1/?serverSelectionTimeoutMS=500&connectTimeoutMS=500')

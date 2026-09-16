@@ -50,6 +50,26 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           command: ["/ueransim/build/nr-gnb"]
           args: ["-c", "/ueransim/config/gnb-config.yaml"]
+          {{- if .Values.gnb.healthChecks.enabled }}
+          {{- $health := list "/bin/sh" "-ec" "node=$(/ueransim/build/nr-cli --dump | head -n 1); test -n \"$node\"; /ueransim/build/nr-cli \"$node\" -e status | grep -q '^is-ngap-up: true$'" }}
+          startupProbe:
+            exec:
+              command: {{ $health | toJson }}
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 12
+          readinessProbe:
+            exec:
+              command: {{ $health | toJson }}
+            periodSeconds: 5
+            timeoutSeconds: 3
+          livenessProbe:
+            exec:
+              command: {{ $health | toJson }}
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 6
+          {{- end }}
           ports:
             - name: radio
               containerPort: {{ .Values.gnb.service.port }}

@@ -1,0 +1,36 @@
+diff --git a/internal/forwarder/gtp5g.go b/internal/forwarder/gtp5g.go
+index 87ca87e..1119c74 100644
+--- a/internal/forwarder/gtp5g.go
++++ b/internal/forwarder/gtp5g.go
+@@ -311,6 +311,21 @@ func (g *Gtp5g) newPdi(i *ie.IE) (nl.AttrList, error) {
+ 	if err != nil {
+ 		return nil, err
+ 	}
++	// gtp5g v0.8.10 tests the inner source address on all received GTP-U
++	// packets. A core-side N9 PDR with a destination UE address would never
++	// match. The allocated F-TEID already identifies this tunnel uniquely.
++	// Scan first: PFCP IE order is not significant.
++	var coreSide, hasFTEID bool
++	for _, x := range ies {
++		if x.Type == ie.SourceInterface {
++			v, err := x.SourceInterface()
++			coreSide = err == nil && v == ie.SrcInterfaceCore
++		}
++		if x.Type == ie.FTEID {
++			_, err := x.FTEID()
++			hasFTEID = err == nil
++		}
++	}
+ 	for _, x := range ies {
+ 		switch x.Type {
+ 		case ie.SourceInterface:
+@@ -338,6 +353,9 @@ func (g *Gtp5g) newPdi(i *ie.IE) (nl.AttrList, error) {
+ 			if err != nil {
+ 				break
+ 			}
++			if coreSide && hasFTEID && v.Flags&0x04 != 0 {
++				continue
++			}
+ 			attrs = append(attrs, nl.Attr{
+ 				Type:  gtp5gnl.PDI_UE_ADDR_IPV4,
+ 				Value: nl.AttrBytes(v.IPv4Address),

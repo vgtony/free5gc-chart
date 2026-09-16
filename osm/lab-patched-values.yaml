@@ -1,0 +1,35 @@
+# Lab profile for the patched core and gtp5g v0.8.10.
+# Migration preserves SQN and requires matching credentials.
+ueransim:
+  provisioning:
+    authenticationSchema: modern
+    sequenceNumberFormat: object
+    initialSqn: '000000000020'
+    migrateAuthentication: true
+free5gc-udm:
+  udm:
+    image:
+      name: 10.160.101.91:32000/free5gc-udm
+      tag: patched
+free5gc-udr:
+  udr:
+    image:
+      name: 10.160.101.91:32000/free5gc-udr
+      tag: patched
+    configVersion: 1.1.0
+    dbConnectorType: mongodb
+free5gc-nssf:
+  nssf:
+    image:
+      name: 10.160.101.91:32000/free5gc-nssf
+      tag: patched
+free5gc-pcf:
+  pcf:
+    image:
+      name: 10.160.101.91:32000/free5gc-pcf
+      tag: patched
+free5gc-upf:
+  upfb:
+    image:
+      name: 10.160.101.91:32000/free5gc-upf
+      tag: n9-compat-1.2.0

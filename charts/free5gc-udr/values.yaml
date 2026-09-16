@@ -48,6 +48,8 @@ mongodb:
     nodePort: "30017"
 
 udr:
+  configVersion: "1.0.2"
+  dbConnectorType: ""
   name: udr
   replicaCount: 1
   image:

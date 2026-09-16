@@ -113,6 +113,10 @@ spec:
                 secretKeyRef:
                   name: {{ include "ueransim.authSecretName" . | quote }}
                   key: op
+          {{- with .Values.ue.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           securityContext:
             {{- toYaml .Values.ue.securityContext | nindent 12 }}
           resources:

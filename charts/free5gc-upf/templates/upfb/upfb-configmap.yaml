@@ -35,10 +35,9 @@ data:
       # The IP list of the N3/N9 interfaces on this UPF
       # If there are multiple connection, set addr to 0.0.0.0 or list all the addresses
       ifList:
-        - addr: {{ .n3if.ipAddress }}
+        # gtp5g opens one socket; wildcard receives both N3 and N9 traffic.
+        - addr: 0.0.0.0
           type: N3
-        - addr: {{ .n9if.ipAddress }}
-          type: N9
           # name: upf.5gc.nctu.me
           # ifname: gtpif
 
@@ -47,10 +46,13 @@ data:
   wrapper.sh: |
     #!/bin/sh
 
-    iptables -A FORWARD -j ACCEPT
-    iptables -t nat -A POSTROUTING -s {{ $.Values.global.uesubnet }} -o n6 -j MASQUERADE  # Allow routing traffic comming from the UE SUBNET to the interface N6
-    iptables -t nat -A POSTROUTING -o n9 -j MASQUERADE
-    iptables -t nat -A POSTROUTING -o n3 -j MASQUERADE
+    iptables -C FORWARD -j ACCEPT 2>/dev/null || iptables -A FORWARD -j ACCEPT
+    {{- range .configuration.dnnList }}
+    iptables -t nat -C POSTROUTING -s {{ .cidr }} -o n6 -j MASQUERADE 2>/dev/null || iptables -t nat -A POSTROUTING -s {{ .cidr }} -o n6 -j MASQUERADE
+    {{- end }}
+    # Preserve GTP outer addresses; N3/N9 are transport interfaces, not Internet egress.
+    ip route replace {{ $.Values.upf1.n9if.ipAddress }}/32 dev n9 src {{ .n9if.ipAddress }}
+    ip route replace {{ $.Values.upf2.n9if.ipAddress }}/32 dev n9 src {{ .n9if.ipAddress }}
 
     {{- if $.Values.upfb.configmap.wrapperAdditionalCommands }}
     {{- $.Values.upfb.configmap.wrapperAdditionalCommands | toYaml | indent 2 }}

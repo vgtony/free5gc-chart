@@ -1,3 +1,26 @@
+## 1.2.10 — self-contained OSM lab test package
+
+- Bake the verified patched-lab profile into parent defaults: modern authentication,
+  SQN-preserving migration, patched UDM/UDR/NSSF/PCF images, UDR 1.1.0 configuration,
+  and the tested `n9-compat-1.2.0` branching UPF image. No extra values file is
+  required for the current lab. Standalone UERANSIM defaults remain legacy.
+- Keep NET_ADMIN/MKNOD and add NET_RAW for UE ping diagnostics.
+- Gate gNB readiness on `nr-cli` reporting NGAP up. Startup/liveness probes restart
+  a gNB that failed to connect to AMF, including the known startup race.
+- Gate UE readiness on an IPv4 address on a UERANSIM tunnel, so Helm/OSM wait
+  includes PDU session establishment.
+- Preserve the 1.2.8 and 1.2.9 archives. Current lab images and reserved LAN addresses
+  remain prerequisites; the existing live release was not upgraded by packaging.
+
+## 1.2.9 — patched-lab subscriber and N9 recovery
+
+- Add explicit modern authentication fields and opt-in schema migration preserving SQN and rejecting credential conflicts. Use `osm/lab-patched-values.yaml` for this deployment.
+- Parameterize UDR config version/connector for the patched UDM/UDR image set.
+- Derive anchor NAT and policy routes from their actual DNN pools.
+- Bind branching UPF GTP to all local addresses, remove transport masquerading, and route anchor peers over N9.
+- Include a reproducible UPFb compatibility image patch for gtp5g v0.8.10's N9 downlink address-matching limitation; see `images/upf-gtp5g-compat/README.md`.
+- Existing chart 1.2.8 archives are preserved. The generic chart keeps legacy authentication defaults; use the patched-lab profile when deploying the patched core.
+
 # Local free5GC chart changes
 
 Reference repository: <https://github.com/Costasgk/free5gc-chart>  

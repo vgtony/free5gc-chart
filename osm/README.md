@@ -54,3 +54,30 @@ You may instead fill `instantiate.yaml` manually and merge all cluster Helm
 values under `additionalParams`. Never submit its literal placeholders.
 
 [OSM KDU instantiation parameter documentation](https://osm.etsi.org/docs/user-guide/develop/vnf-onboarding/05-quickstarts.html)
+
+## Patched lab profile (chart 1.2.9)
+
+For the `.89` cluster's patched UDM/UDR and gtp5g v0.8.10, apply the values in
+[`lab-patched-values.yaml`](lab-patched-values.yaml). With Helm, pass
+`-f osm/lab-patched-values.yaml`; with OSM, merge these mappings into the KDU's
+`additionalParams` alongside its existing network/credential settings. The
+profile requires the custom UPFb image built from
+`images/upf-gtp5g-compat/`. An upgrade must retain the current UE Secret values;
+existing mismatching authentication credentials are rejected, not overwritten.
+
+After any UPF recreation, verify PFCP association before retrying the UE. The
+current SMF may need a restart to establish association with a restarted UPF.
+Do not clear MongoDB or reset SQN as a routine retry procedure.
+
+## OSM test package 1.2.10
+
+`dist/free5gc-1.2.10.tgz` includes the patched-lab settings directly in its
+parent defaults. The separate `lab-patched-values.yaml` is optional for this
+version. Use the new archive name in the KDU reference; remove stale overrides
+that select old NF images, legacy authentication, or empty UE credentials.
+The existing lab uses fixed Multus addresses and MongoDB resource names, so this
+is a replacement installation/upgrade, not a parallel second release.
+
+The chart still needs gtp5g v0.8.10 and private-registry access on prepared workers.
+The `.91:32000` registry contains the required UPFb compatibility image. Kernel
+and containerd preparation remains outside Helm. Preserve the MongoDB PVC.

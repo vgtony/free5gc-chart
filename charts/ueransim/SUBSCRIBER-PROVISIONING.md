@@ -1,4 +1,4 @@
-# Automatic subscriber provisioning (chart 1.2.7)
+# Automatic subscriber provisioning (chart 1.2.10)
 
 The combined chart enables `ueransim.provisioning.enabled` by default. The
 standalone subchart leaves `provisioning.enabled=false` to avoid unexpectedly
@@ -23,7 +23,7 @@ SUPI, MCC/MNC, AMF authentication field, slices and requested sessions to create
 - `policyData.ues.amData`
 - `policyData.ues.smData`
 
-The schema follows free5GC v3.3.0 / webconsole v1.2.0. OP input is converted to OPc
+The legacy schema follows free5GC v3.3.0 / webconsole v1.2.0. The 1.2.10 umbrella chart selects the modern schema for the patched lab. OP input is converted to OPc
 using AES-128 as specified by Milenage; OPC input is used directly. The same
 original value and `opType` are still supplied to UERANSIM.
 
@@ -43,10 +43,26 @@ namespace containing the full connection URI under `mongoSecretKey` (default
 read and write privileges for the six collections above. Keep connection and
 server-selection timeouts bounded in custom URIs.
 
-`sequenceNumberFormat: string` is the upstream v3.3.0 schema. The optional
-`object` format supports cores whose authentication model instead expects
-`{sqn, sqnScheme, ind}`. Match it to the actual core version; it affects only new
-records. Existing SQN is never reset or converted by the provisioner.
+`authenticationSchema: legacy` writes `permanentKey` and `opc` objects.
+`authenticationSchema: modern` writes `encPermanentKey` and `encOpcKey` strings
+and requires `sequenceNumberFormat: object`. Select this for the patched UDM/UDR
+in the lab; a version banner alone does not identify its model schema.
+
+`sequenceNumberFormat: string` stores a hex string; `object` stores
+`{sqn, sqnScheme}`. For a fresh UERANSIM lab subscriber, the patched profile uses
+`initialSqn: "000000000020"`, ahead of the simulator's zero counter. Existing
+SQN is never reset by provisioning.
+
+Set `migrateAuthentication: true` to convert a matching existing record's schema
+while preserving its SQN and existing object metadata. Every stored credential
+representation must match the shared UE Secret. Conflicts fail before writes;
+migration never rotates credentials. An invalid SQN also fails without writes.
+The update compares the existing record so concurrent changes cause a retry
+instead of overwriting newer data. Back up the subscriber before a migration.
+
+The legacy WebUI writes the old fields and cannot maintain modern authentication
+records correctly. Use the provisioner for this subscriber. The generic error
+in chart 1.2.8 did not imply that a migration switch existed in that version.
 
 Automatic provisioning supports IPv4 sessions with simple DNN names (letters,
 digits, hyphens); other session types or dotted DNNs fail clearly. For those
@@ -54,7 +70,7 @@ profiles, disable provisioning and use the core's provisioning interface.
 
 ## Repeated installs, retries and upgrades
 
-The authentication record is created only if missing. Existing key, OPc, method
+The authentication record is created if missing or explicitly migrated. Existing key, OPc, method
 and authentication management field must match; a conflict stops initialization
 without rotating the existing credentials. An existing OP-only record must be
 migrated to the equivalent OPc form before enabling this provisioner.

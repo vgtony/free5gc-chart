@@ -42,6 +42,8 @@ network:
   macAddress: ""
 
 gnb:
+  healthChecks:
+    enabled: true
   replicaCount: 1
   service:
     port: 4997
@@ -71,6 +73,12 @@ gnb:
     cellAccessType: nr
 
 ue:
+  readinessProbe:
+    exec:
+      command: ["/bin/sh", "-ec", "ip -4 -o addr show | grep -Eq 'uesimtun[0-9]+.*inet '"]
+    periodSeconds: 5
+    timeoutSeconds: 3
+    failureThreshold: 3
   replicaCount: 1
   # Helm creates a release-specific Secret by default. Supply the credentials
   # to use for this subscriber at installation time.
@@ -149,6 +157,10 @@ provisioning:
   initialSqn: "000000000000"
   # v3.3.0 uses a string. Select object only for cores using the newer schema.
   sequenceNumberFormat: string
+  # modern uses encPermanentKey/encOpcKey and requires object SQN.
+  authenticationSchema: legacy
+  # Convert matching records while retaining their current SQN; never rotate credentials.
+  migrateAuthentication: false
   ueAmbr:
     uplink: "1 Gbps"
     downlink: "2 Gbps"

@@ -18,6 +18,10 @@ deployUeransim: true
 ueransim:
   provisioning:
     enabled: true
+    authenticationSchema: modern
+    sequenceNumberFormat: object
+    initialSqn: '000000000020'
+    migrateAuthentication: true
   image:
     repository: 10.160.101.91:32000/ueransim
     tag: "3.3.0"
@@ -29,6 +33,9 @@ ueransim:
   nodeSelector:
     telecom.example/ran: "true"
   ue:
+    securityContext:
+      capabilities:
+        add: [NET_ADMIN, MKNOD, NET_RAW]
     # Empty uses a release-specific Secret name when auth.create=true.
     existingAuthSecret: ""
     auth:
@@ -975,8 +982,9 @@ free5gc-nssf:
         - nnssf-nsselection
         - nnssf-nssaiavailability
     image:
-      name: towards5gs/free5gc-nssf
+      name: 10.160.101.91:32000/free5gc-nssf
       pullPolicy: Always
+      tag: patched
     imagePullSecrets: []
     ingress:
       annotations: {}
@@ -1124,8 +1132,9 @@ free5gc-pcf:
         - serviceName: npcf-eventexposure
         - serviceName: npcf-ue-policy-control
     image:
-      name: towards5gs/free5gc-pcf
+      name: 10.160.101.91:32000/free5gc-pcf
       pullPolicy: Always
+      tag: patched
     imagePullSecrets: []
     ingress:
       annotations: {}
@@ -1546,8 +1555,9 @@ free5gc-udm:
         - nudm-ee
         - nudm-pp
     image:
-      name: towards5gs/free5gc-udm
+      name: 10.160.101.91:32000/free5gc-udm
       pullPolicy: Always
+      tag: patched
     imagePullSecrets: []
     ingress:
       annotations: {}
@@ -1680,6 +1690,8 @@ free5gc-udr:
       type: ClusterIP
   nameOverride: ""
   udr:
+    configVersion: "1.1.0"
+    dbConnectorType: mongodb
     affinity: {}
     autoscaling:
       enabled: false
@@ -1694,8 +1706,9 @@ free5gc-udr:
         reportCaller: false
       serviceNameList: ""
     image:
-      name: towards5gs/free5gc-udr
+      name: 10.160.101.91:32000/free5gc-udr
       pullPolicy: Always
+      tag: patched
     imagePullSecrets: []
     ingress:
       annotations: {}
@@ -2001,8 +2014,9 @@ free5gc-upf:
         level: info
         reportCaller: false
     image:
-      name: towards5gs/free5gc-upf
+      name: 10.160.101.91:32000/free5gc-upf
       pullPolicy: Always
+      tag: n9-compat-1.2.0
     imagePullSecrets: []
     livenessProbe:
       failureThreshold: 3

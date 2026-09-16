@@ -20,10 +20,13 @@ metadata:
 data:
   udrcfg.yaml: |
     info:
-      version: 1.0.2
+      version: {{ .configVersion | default "1.0.2" }}
       description: UDR initial local configuration
 
     configuration:
+      {{- with .dbConnectorType }}
+      dbConnectorType: {{ . }}
+      {{- end }}
       sbi:
         scheme: {{ $.Values.global.sbi.scheme }}
         registerIPv4: {{ include "free5gc-udr.fullname" $ }}-service # IP used to register to NRF

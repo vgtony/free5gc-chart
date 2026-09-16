@@ -2,6 +2,12 @@
 {{- if not (has .Values.provisioning.sequenceNumberFormat (list "string" "object")) }}
 {{- fail "provisioning.sequenceNumberFormat must be string or object" }}
 {{- end }}
+{{- if not (has .Values.provisioning.authenticationSchema (list "legacy" "modern")) }}
+{{- fail "provisioning.authenticationSchema must be legacy or modern" }}
+{{- end }}
+{{- if and (eq .Values.provisioning.authenticationSchema "modern") (ne .Values.provisioning.sequenceNumberFormat "object") }}
+{{- fail "modern authenticationSchema requires object sequenceNumberFormat" }}
+{{- end }}
 {{- if not (regexMatch "^[0-9A-Fa-f]{12}$" .Values.provisioning.initialSqn) }}
 {{- fail "provisioning.initialSqn must contain exactly 12 hexadecimal characters" }}
 {{- end }}
@@ -14,7 +20,7 @@ metadata:
 data:
   subscriber.json: |
     {{- $config := deepCopy .Values.ue.config }}
-    {{- range $key := list "database" "waitSeconds" "initialSqn" "sequenceNumberFormat" "ueAmbr" "sessionAmbr" }}
+    {{- range $key := list "authenticationSchema" "migrateAuthentication" "database" "waitSeconds" "initialSqn" "sequenceNumberFormat" "ueAmbr" "sessionAmbr" }}
     {{- $_ := set $config $key (index $.Values.provisioning $key) }}
     {{- end }}
     {{- $config | toPrettyJson | nindent 4 }}
